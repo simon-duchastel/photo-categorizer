@@ -1,3 +1,5 @@
+import org.gradle.internal.impldep.org.junit.Ignore
+
 pluginManagement {
     repositories {
         google {
@@ -21,3 +23,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Photo Categorizer"
 include(":app")
+include(":app:auth")
