@@ -57,8 +57,6 @@ dependencies {
     implementation(libs.hilt)
     implementation(libs.hilt.navigation.compose)
 
-    implementation(libs.openid.appauth)
-
     testImplementation(libs.junit)
 
     androidTestImplementation(libs.androidx.junit)

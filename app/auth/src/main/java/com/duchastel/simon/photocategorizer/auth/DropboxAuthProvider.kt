@@ -22,7 +22,7 @@ import javax.inject.Singleton
 
 @Dropbox
 @Singleton
-class DropboxAuthProvider @Inject constructor(
+internal class DropboxAuthProvider @Inject constructor(
     @ApplicationContext private val context: Context,
 ): AuthProvider {
     private val config: AuthorizationServiceConfiguration =
