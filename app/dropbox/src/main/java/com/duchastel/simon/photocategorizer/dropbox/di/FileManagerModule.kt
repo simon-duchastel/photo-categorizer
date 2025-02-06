@@ -14,6 +14,7 @@ import javax.inject.Singleton
 object FileManagerModule {
 
     @Provides
+    @Dropbox
     @Singleton
     fun provideDropboxFileManager(
         networkApi: DropboxFileApi,

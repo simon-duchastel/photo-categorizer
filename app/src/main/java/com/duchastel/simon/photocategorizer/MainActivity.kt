@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.duchastel.simon.photocategorizer.auth.AuthProvider
+import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
 import com.duchastel.simon.photocategorizer.filemanager.FileManager
 import com.duchastel.simon.photocategorizer.ui.theme.PhotoCategorizerTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -44,8 +45,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject lateinit var authProvider: AuthProvider
-    @Inject lateinit var fileManager: FileManager
+    @Inject @Dropbox lateinit var authProvider: AuthProvider
+    @Inject @Dropbox lateinit var fileManager: FileManager
 
     private fun createIntent(): PendingIntent {
         val intent = Intent(this, this::class.java)

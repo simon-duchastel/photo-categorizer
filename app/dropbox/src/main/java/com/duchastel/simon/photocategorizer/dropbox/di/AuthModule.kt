@@ -15,6 +15,7 @@ import javax.inject.Singleton
 object AuthModule {
 
     @Provides
+    @Dropbox
     @Singleton
     fun provideDropboxAuthProvider(
         @ApplicationContext context: Context
