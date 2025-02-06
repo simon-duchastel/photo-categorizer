@@ -90,28 +90,18 @@ internal class DropboxAuthProvider @Inject constructor(
     override suspend fun <T> executeWithAuthToken(
         execute: suspend (authToken: AuthToken) -> T,
     ): T {
-        val accessToken: AuthToken = suspendCoroutine { continuation ->
-            authState.apply {
-                // TODO - replace this with custom logic
-                //  this relies on a refresh token, which PKCE doesn't provide
-                performActionWithFreshTokens(authService) { accessToken, _, error ->
-                    if (error != null || accessToken == null) {
-                        val exception = error ?: USER_NOT_SIGNED_IN_EXCEPTION
-                        continuation.resumeWithException(exception)
-                        return@performActionWithFreshTokens
-                    }
-
-                    try {
-                        continuation.resume(AuthToken(accessToken))
-                    } catch (e: Exception) {
-                        continuation.resumeWithException(e)
-                    }
+        val authToken: AuthToken = suspendCoroutine { continuation ->
+            authState.accessToken.apply {
+                if (this != null) {
+                    continuation.resume(AuthToken(this))
+                } else {
+                    continuation.resumeWithException(USER_NOT_SIGNED_IN_EXCEPTION)
                 }
             }
         }
         writeAuthState()
 
-        return execute(accessToken)
+        return execute(authToken)
     }
 
     // Private functions

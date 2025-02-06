@@ -1,6 +1,5 @@
-package com.duchastel.simon.photocategorizer.dropbox.network
+package com.duchastel.simon.photocategorizer.auth
 
-import com.duchastel.simon.photocategorizer.auth.AuthProvider
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -21,7 +20,7 @@ class AccessTokenAuthInterceptor(
                 }
             }
         } catch (ex: Exception) {
-            // TODO - handle error
+            // TODO - handle error better
             request
         }
 
