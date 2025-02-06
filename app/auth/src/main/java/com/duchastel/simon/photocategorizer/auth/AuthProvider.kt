@@ -24,12 +24,11 @@ interface AuthProvider {
      * Execute an API request with a valid AuthToken. May refresh the token under the hood,
      * so expect this call to potentially be long-running.
      *
-     * Must be called after successfully logging in, otherwise
+     * Must be called after successfully logging in.
      */
-    fun executeWithAuthToken(
-        execute: (authToken: AuthToken) -> Unit,
-        onError: (error: Exception) -> Unit,
-    )
+    suspend fun <T> executeWithAuthToken(
+        execute: suspend (authToken: AuthToken) -> T,
+    ): T
 }
 
 data class AuthToken(
