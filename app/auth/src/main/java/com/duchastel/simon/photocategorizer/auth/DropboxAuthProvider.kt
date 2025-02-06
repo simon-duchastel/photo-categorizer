@@ -17,10 +17,8 @@ import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
 import javax.inject.Inject
-import javax.inject.Qualifier
 import javax.inject.Singleton
 
-@Dropbox
 @Singleton
 internal class DropboxAuthProvider @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -99,14 +97,9 @@ object DropboxAuthModule {
 
     @Provides
     @Singleton
-    @Dropbox
     fun provideDropboxAuthProvider(
         @ApplicationContext context: Context
     ): AuthProvider {
         return DropboxAuthProvider(context)
     }
 }
-
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class Dropbox

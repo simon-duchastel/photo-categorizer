@@ -43,6 +43,7 @@ android {
 
 dependencies {
     implementation(project(":app:auth"))
+    implementation(project(":app:filemanager"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

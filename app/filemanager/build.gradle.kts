@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.duchastel.simon.photocategorizer.auth"
+    namespace = "com.duchastel.simon.photocategorizer.filemanager"
     compileSdk = 35
 
     defaultConfig {
@@ -37,10 +37,16 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.openid.appauth)
+    implementation(libs.material)
 
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)
+
+    implementation(libs.gson)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 
     testImplementation(libs.junit)
 }
