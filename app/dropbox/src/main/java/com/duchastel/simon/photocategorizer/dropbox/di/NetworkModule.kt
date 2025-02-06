@@ -1,5 +1,7 @@
 package com.duchastel.simon.photocategorizer.dropbox.di
 
+import com.duchastel.simon.photocategorizer.auth.AuthProvider
+import com.duchastel.simon.photocategorizer.dropbox.network.AccessTokenAuthInterceptor
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -18,16 +20,30 @@ import javax.inject.Singleton
 object NetworkModule {
 
     @Provides
+    @Dropbox
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideDropboxAuthInterceptor(
+        @Dropbox authProvider: AuthProvider
+    ): AccessTokenAuthInterceptor {
+        return AccessTokenAuthInterceptor(authProvider)
+    }
+
+    @Provides
+    @Dropbox
+    @Singleton
+    fun provideOkHttpClient(
+        @Dropbox authInterceptor: AccessTokenAuthInterceptor,
+    ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor()
         loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
         return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
             .build()
     }
 
     @Provides
+    @Dropbox
     @Singleton
     fun provideGson(): Gson {
         return GsonBuilder().create()
@@ -36,7 +52,10 @@ object NetworkModule {
     @Provides
     @Dropbox
     @Singleton
-    fun provideDropboxRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
+    fun provideDropboxRetrofit(
+        @Dropbox okHttpClient: OkHttpClient,
+        @Dropbox gson: Gson,
+    ): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.dropboxapi.com/2/")
             .addConverterFactory(GsonConverterFactory.create(gson))

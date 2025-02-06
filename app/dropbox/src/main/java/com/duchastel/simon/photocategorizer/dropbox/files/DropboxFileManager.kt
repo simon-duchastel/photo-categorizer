@@ -11,9 +11,9 @@ import javax.inject.Singleton
 internal class DropboxFileManager @Inject constructor(
     private val networkApi: DropboxFileApi,
 ): FileManager {
-    override suspend fun listPhotos(accessToken: String): List<Photo> {
+    override suspend fun listPhotos(): List<Photo> {
         return networkApi
-            .fetchData("Bearer $accessToken", ListFolderRequest("id:QjViWc9B0fAAAAAAAAAjtg"))
+            .fetchData(ListFolderRequest("id:QjViWc9B0fAAAAAAAAAjtg"))
             .entries
             .map { Photo(it.name) }
     }

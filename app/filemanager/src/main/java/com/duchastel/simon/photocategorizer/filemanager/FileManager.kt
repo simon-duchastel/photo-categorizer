@@ -1,7 +1,7 @@
 package com.duchastel.simon.photocategorizer.filemanager
 
 interface FileManager {
-    suspend fun listPhotos(accessToken: String): List<Photo>
+    suspend fun listPhotos(): List<Photo>
 }
 
 data class Photo(

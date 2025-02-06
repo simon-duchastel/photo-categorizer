@@ -32,20 +32,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.duchastel.simon.photocategorizer.auth.AuthProvider
+import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
 import com.duchastel.simon.photocategorizer.filemanager.FileManager
 import com.duchastel.simon.photocategorizer.ui.theme.PhotoCategorizerTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.IOException
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject lateinit var authProvider: AuthProvider
-    @Inject lateinit var fileManager: FileManager
+    @Inject @Dropbox lateinit var authProvider: AuthProvider
+    @Inject @Dropbox lateinit var fileManager: FileManager
 
     private fun createIntent(): PendingIntent {
         val intent = Intent(this, this::class.java)
@@ -59,13 +58,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-
         authProvider.processIntent(intent)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         authProvider.processIntent(intent)
 
         enableEdgeToEdge()
@@ -80,10 +77,7 @@ class MainActivity : ComponentActivity() {
                 }
                 scope.launch {
                     try {
-                        authProvider.executeWithAuthToken { token ->
-                            fileNames = fileManager.listPhotos(token.accessToken).map { it.name }
-                            println("TODO - $fileNames")
-                        }
+                        fileNames = fileManager.listPhotos().map { it.name }
                     } catch (ex: Exception) {
                         println("NETWORK ERROR: $ex")
                     }
