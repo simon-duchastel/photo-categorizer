@@ -1,10 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.duchastel.simon.photocategorizer.auth"
+    namespace = "com.duchastel.simon.photocategorizer.dropbox"
     compileSdk = 35
 
     defaultConfig {
@@ -33,8 +35,26 @@ android {
 }
 
 dependencies {
+    implementation(project(":app:auth"))
+    implementation(project(":app:filemanager"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+
+    implementation(libs.openid.appauth)
+
+    implementation(libs.hilt)
+    ksp(libs.hilt.compiler)
+
+    implementation(libs.gson)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 
     testImplementation(libs.junit)
+
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }
