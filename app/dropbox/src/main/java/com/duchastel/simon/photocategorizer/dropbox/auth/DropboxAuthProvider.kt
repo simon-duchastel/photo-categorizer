@@ -38,19 +38,15 @@ internal class DropboxAuthProvider @Inject constructor(
         AuthorizationServiceConfiguration(AUTH_ENDPOINT, TOKEN_ENDPOINT)
     private val authService = AuthorizationService(context);
 
-    private var authState: AuthState = AuthState(config)
+    private var authState: AuthState = sharedPreferences.getString(
+        "AUTH_STATE",
+        null
+    )?.let { AuthState.jsonDeserialize(it) } ?: AuthState(config)
 
     // Public functions
 
     override fun isLoggedIn(): Boolean {
-        val savedState = sharedPreferences.getString("AUTH_STATE", null) ?: return false
-
-        val savedAuthState = AuthState.jsonDeserialize(savedState)
-        return savedAuthState.isAuthorized.also { isAuthorized ->
-            if (isAuthorized) {
-                authState = savedAuthState
-            }
-        }
+        return authState.isAuthorized
     }
 
     override fun login(redirectIntent: PendingIntent) {
@@ -67,10 +63,14 @@ internal class DropboxAuthProvider @Inject constructor(
         )
     }
 
+    override fun logout() {
+        authState = AuthState(config)
+        writeAuthState()
+    }
+
     override fun processIntent(intent: Intent) {
         val authResponse = AuthorizationResponse.fromIntent(intent)
         val authError = AuthorizationException.fromIntent(intent)
-        println("TODO PROCESSING ${intent.data}")
 
         // if both are null, this intent isn't an auth intent
         if (authResponse == null && authError == null) return

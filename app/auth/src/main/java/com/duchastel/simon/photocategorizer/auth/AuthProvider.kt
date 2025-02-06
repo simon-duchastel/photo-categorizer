@@ -19,6 +19,11 @@ interface AuthProvider {
     )
 
     /**
+     * Logout the current user.
+     */
+    fun logout()
+
+    /**
      * Must call onNewIntent in your [Activity.onNewIntent] and [Activity.onCreate] methods.
      */
     fun processIntent(intent: Intent)

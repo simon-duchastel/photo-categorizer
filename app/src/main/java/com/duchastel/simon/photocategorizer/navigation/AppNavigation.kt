@@ -8,17 +8,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.duchastel.simon.photocategorizer.screens.login.LoginViewModel
 import com.duchastel.simon.photocategorizer.navigation.NavDestination.Login
 import com.duchastel.simon.photocategorizer.navigation.NavDestination.PhotoSwiper
 import com.duchastel.simon.photocategorizer.navigation.NavDestination.Splash
 import com.duchastel.simon.photocategorizer.screens.login.LoginScreen
+import com.duchastel.simon.photocategorizer.screens.login.LoginViewModel
 import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperScreen
 import com.duchastel.simon.photocategorizer.screens.splash.SplashScreen
 import kotlinx.serialization.Serializable
 
 @Composable
-fun AppNavigation(viewModel: LoginViewModel = hiltViewModel()) {
+fun AppNavigation(viewModel: LoginViewModel = hiltViewModel(), ) {
     val navController = rememberNavController()
 
     val state by viewModel.state.collectAsState()
@@ -39,7 +39,10 @@ fun AppNavigation(viewModel: LoginViewModel = hiltViewModel()) {
             LoginScreen()
         }
         composable<PhotoSwiper> {
-            PhotoSwiperScreen()
+            PhotoSwiperScreen(logout = {
+                viewModel.logout()
+                navController.navigate(Login)
+            })
         }
     }
 }
