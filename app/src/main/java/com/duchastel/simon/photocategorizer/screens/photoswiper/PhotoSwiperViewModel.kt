@@ -1,4 +1,4 @@
-package com.duchastel.simon.photocategorizer.photoswiper
+package com.duchastel.simon.photocategorizer.screens.photoswiper
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
