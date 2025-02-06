@@ -1,10 +1,10 @@
-package com.duchastel.simon.photocategorizer.filemanager
+package com.duchastel.simon.photocategorizer.dropbox.network
 
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
 
-interface DropboxNetworkApi {
+interface DropboxFileApi {
 
     @POST("files/list_folder")
     suspend fun fetchData(
@@ -12,15 +12,3 @@ interface DropboxNetworkApi {
         @Body body: ListFolderRequest,
     ): ListFolderResponse
 }
-
-data class ListFolderRequest(
-    val path: String,
-)
-
-data class ListFolderResponse(
-    val entries: List<FileEntry>,
-)
-
-data class FileEntry(
-    val name: String,
-)

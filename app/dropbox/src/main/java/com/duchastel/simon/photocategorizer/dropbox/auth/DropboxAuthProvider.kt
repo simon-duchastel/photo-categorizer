@@ -1,14 +1,12 @@
-package com.duchastel.simon.photocategorizer.auth
+package com.duchastel.simon.photocategorizer.dropbox.auth
 
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
+import com.duchastel.simon.photocategorizer.auth.AuthProvider
+import com.duchastel.simon.photocategorizer.auth.AuthToken
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationException.TYPE_GENERAL_ERROR
@@ -88,18 +86,5 @@ internal class DropboxAuthProvider @Inject constructor(
         private val AUTH_ENDPOINT = "https://www.dropbox.com/oauth2/authorize".toUri()
         private val TOKEN_ENDPOINT = "https://www.dropbox.com/oauth2/token".toUri()
         private val REDIRECT_URI = "https://duchastel.com".toUri()
-    }
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-object DropboxAuthModule {
-
-    @Provides
-    @Singleton
-    fun provideDropboxAuthProvider(
-        @ApplicationContext context: Context
-    ): AuthProvider {
-        return DropboxAuthProvider(context)
     }
 }

@@ -1,6 +1,6 @@
-package com.duchastel.simon.photocategorizer.filemanager.di
+package com.duchastel.simon.photocategorizer.dropbox.di
 
-import com.duchastel.simon.photocategorizer.filemanager.DropboxNetworkApi
+import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -11,7 +11,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import javax.inject.Qualifier
 import javax.inject.Singleton
 
 @Module
@@ -37,7 +36,7 @@ object NetworkModule {
     @Provides
     @Dropbox
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
+    fun provideDropboxRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.dropboxapi.com/2/")
             .addConverterFactory(GsonConverterFactory.create(gson))
@@ -47,11 +46,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideApiService(@Dropbox retrofit: Retrofit): DropboxNetworkApi {
-        return retrofit.create(DropboxNetworkApi::class.java)
+    fun provideApiService(@Dropbox retrofit: Retrofit): DropboxFileApi {
+        return retrofit.create(DropboxFileApi::class.java)
     }
-
-    @Qualifier
-    @Retention(AnnotationRetention.BINARY)
-    annotation class Dropbox
 }
