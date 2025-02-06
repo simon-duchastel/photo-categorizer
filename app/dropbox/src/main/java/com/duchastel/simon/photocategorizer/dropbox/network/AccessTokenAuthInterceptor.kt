@@ -22,7 +22,6 @@ class AccessTokenAuthInterceptor(
             }
         } catch (ex: Exception) {
             // TODO - handle error
-            chain.call().cancel() // attempt to cancel to avoid an unnecessary call
             request
         }
 

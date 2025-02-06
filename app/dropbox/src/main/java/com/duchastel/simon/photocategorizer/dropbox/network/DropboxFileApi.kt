@@ -6,7 +6,7 @@ import retrofit2.http.POST
 interface DropboxFileApi {
 
     @POST("files/list_folder")
-    suspend fun fetchData(
+    suspend fun listFolder(
         @Body body: ListFolderRequest,
     ): ListFolderResponse
 }

@@ -47,11 +47,12 @@ dependencies {
     implementation(libs.hilt)
     ksp(libs.hilt.compiler)
 
-    implementation(libs.gson)
     implementation(libs.retrofit)
-    implementation(libs.retrofit.gson)
+    implementation(libs.retrofit.moshi)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+    implementation(libs.moshi)
+    ksp(libs.moshi.codegen)
 
     testImplementation(libs.junit)
 

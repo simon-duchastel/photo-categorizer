@@ -3,8 +3,7 @@ package com.duchastel.simon.photocategorizer.dropbox.di
 import com.duchastel.simon.photocategorizer.auth.AuthProvider
 import com.duchastel.simon.photocategorizer.dropbox.network.AccessTokenAuthInterceptor
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,7 +11,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 
 @Module
@@ -45,8 +44,8 @@ object NetworkModule {
     @Provides
     @Dropbox
     @Singleton
-    fun provideGson(): Gson {
-        return GsonBuilder().create()
+    fun provideMoshi(): Moshi {
+        return Moshi.Builder().build()
     }
 
     @Provides
@@ -54,11 +53,11 @@ object NetworkModule {
     @Singleton
     fun provideDropboxRetrofit(
         @Dropbox okHttpClient: OkHttpClient,
-        @Dropbox gson: Gson,
+        @Dropbox moshi: Moshi,
     ): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.dropboxapi.com/2/")
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .client(okHttpClient)
             .build()
     }
