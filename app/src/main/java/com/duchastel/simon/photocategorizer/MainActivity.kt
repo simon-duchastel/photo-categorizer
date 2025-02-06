@@ -58,13 +58,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-
         authProvider.processIntent(intent)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         authProvider.processIntent(intent)
 
         enableEdgeToEdge()
