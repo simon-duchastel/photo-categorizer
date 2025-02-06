@@ -36,10 +36,8 @@ import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
 import com.duchastel.simon.photocategorizer.filemanager.FileManager
 import com.duchastel.simon.photocategorizer.ui.theme.PhotoCategorizerTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.IOException
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -81,10 +79,7 @@ class MainActivity : ComponentActivity() {
                 }
                 scope.launch {
                     try {
-                        authProvider.executeWithAuthToken { token ->
-                            fileNames = fileManager.listPhotos(token.accessToken).map { it.name }
-                            println("TODO - $fileNames")
-                        }
+                        fileNames = fileManager.listPhotos().map { it.name }
                     } catch (ex: Exception) {
                         println("NETWORK ERROR: $ex")
                     }
