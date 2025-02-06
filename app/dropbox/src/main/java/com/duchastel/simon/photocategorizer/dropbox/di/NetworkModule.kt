@@ -1,15 +1,14 @@
 package com.duchastel.simon.photocategorizer.dropbox.di
 
 import com.duchastel.simon.photocategorizer.auth.AuthProvider
+import com.duchastel.simon.photocategorizer.dropbox.network.AccessTokenAuthInterceptor
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
-import com.duchastel.simon.photocategorizer.dropbox.network.OauthAuthenticator
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import okhttp3.Authenticator
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -23,22 +22,22 @@ object NetworkModule {
     @Provides
     @Dropbox
     @Singleton
-    fun provideDropboxAuthAuthenticator(
+    fun provideDropboxAuthInterceptor(
         @Dropbox authProvider: AuthProvider
-    ): Authenticator {
-        return OauthAuthenticator(authProvider)
+    ): AccessTokenAuthInterceptor {
+        return AccessTokenAuthInterceptor(authProvider)
     }
 
     @Provides
     @Dropbox
     @Singleton
     fun provideOkHttpClient(
-        @Dropbox authenticator: Authenticator,
+        @Dropbox authInterceptor: AccessTokenAuthInterceptor,
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor()
         loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
         return OkHttpClient.Builder()
-            .authenticator(authenticator)
+            .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
             .build()
     }
