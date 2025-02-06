@@ -6,14 +6,22 @@ import android.content.Intent
 
 interface AuthProvider {
     /**
+     * Returns true if the user is currently logged in, false otherwise.
+     */
+    fun isLoggedIn(): Boolean
+
+    /**
      * Begins the login flow. Note that this may launch a Chrome Custom Tab to login the user,
      * so expect this to potentially cause the user to leave your activity.
-     *
-     *
      */
     fun login(
         redirectIntent: PendingIntent
     )
+
+    /**
+     * Logout the current user.
+     */
+    fun logout()
 
     /**
      * Must call onNewIntent in your [Activity.onNewIntent] and [Activity.onCreate] methods.

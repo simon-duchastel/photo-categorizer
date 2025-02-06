@@ -1,18 +1,19 @@
 package com.duchastel.simon.photocategorizer.dropbox.di
 
 import com.duchastel.simon.photocategorizer.auth.AuthProvider
-import com.duchastel.simon.photocategorizer.dropbox.network.AccessTokenAuthInterceptor
+import com.duchastel.simon.photocategorizer.auth.AccessTokenAuthInterceptor
+import com.duchastel.simon.photocategorizer.auth.LoggedOutInterceptor
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import okhttp3.logging.HttpLoggingInterceptor.Level
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 
 @Module
@@ -22,7 +23,7 @@ object NetworkModule {
     @Provides
     @Dropbox
     @Singleton
-    fun provideDropboxAuthInterceptor(
+    fun provideAuthInterceptor(
         @Dropbox authProvider: AuthProvider
     ): AccessTokenAuthInterceptor {
         return AccessTokenAuthInterceptor(authProvider)
@@ -31,34 +32,53 @@ object NetworkModule {
     @Provides
     @Dropbox
     @Singleton
+    fun provideLoggedOutInterceptor(
+        @Dropbox authProvider: AuthProvider
+    ): LoggedOutInterceptor {
+        return LoggedOutInterceptor(authProvider)
+    }
+
+    @Provides
+    @Dropbox
+    @Singleton
+    fun provideLoggingInterceptor(): HttpLoggingInterceptor {
+        return HttpLoggingInterceptor().apply {
+            level = Level.BODY
+        }
+    }
+
+    @Provides
+    @Dropbox
+    @Singleton
     fun provideOkHttpClient(
         @Dropbox authInterceptor: AccessTokenAuthInterceptor,
+        @Dropbox loggedOutInterceptor: LoggedOutInterceptor,
+        @Dropbox loggingInterceptor: HttpLoggingInterceptor,
     ): OkHttpClient {
-        val loggingInterceptor = HttpLoggingInterceptor()
-        loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
         return OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
+            .addInterceptor(loggedOutInterceptor)
             .build()
     }
 
     @Provides
     @Dropbox
     @Singleton
-    fun provideGson(): Gson {
-        return GsonBuilder().create()
+    fun provideMoshi(): Moshi {
+        return Moshi.Builder().build()
     }
 
     @Provides
     @Dropbox
     @Singleton
-    fun provideDropboxRetrofit(
+    fun provideRetrofit(
         @Dropbox okHttpClient: OkHttpClient,
-        @Dropbox gson: Gson,
+        @Dropbox moshi: Moshi,
     ): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.dropboxapi.com/2/")
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .client(okHttpClient)
             .build()
     }
