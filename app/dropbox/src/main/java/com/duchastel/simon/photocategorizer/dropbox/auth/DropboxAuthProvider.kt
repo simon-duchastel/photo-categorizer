@@ -16,6 +16,9 @@ import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 @Singleton
 internal class DropboxAuthProvider @Inject constructor(
@@ -58,27 +61,35 @@ internal class DropboxAuthProvider @Inject constructor(
         }
     }
 
-    override fun executeWithAuthToken(
-        execute: (authToken: AuthToken) -> Unit,
-        onError: (error: Exception) -> Unit,
-    ) {
-        authState.apply {
-            performActionWithFreshTokens(authService) { accessToken, _, error ->
-                if (error != null || accessToken == null) {
-                    onError(error ?: AuthorizationException(
-                        /* type = */ TYPE_GENERAL_ERROR,
-                        /* code = */ 99,
-                        /* error = */ "USER NOT SIGNED IN",
-                        /* errorDescription = */ "No auth tokens found. Have you called login()?",
-                        /* errorUri = */ null,
-                        /* rootCause = */ null,
-                    ))
-                    return@performActionWithFreshTokens
-                }
+    override suspend fun <T> executeWithAuthToken(
+        execute: suspend (authToken: AuthToken) -> T,
+    ): T {
+        val accessToken: AuthToken = suspendCoroutine { continuation ->
+            authState.apply {
+                performActionWithFreshTokens(authService) { accessToken, _, error ->
+                    if (error != null || accessToken == null) {
+                        val exception = error ?: AuthorizationException(
+                            /* type = */ TYPE_GENERAL_ERROR,
+                            /* code = */ 99,
+                            /* error = */ "USER NOT SIGNED IN",
+                            /* errorDescription = */ "No auth tokens found. Have you called login()?",
+                            /* errorUri = */ null,
+                            /* rootCause = */ null
+                        )
+                        continuation.resumeWithException(exception)
+                        return@performActionWithFreshTokens
+                    }
 
-                execute(AuthToken(accessToken))
+                    try {
+                        continuation.resume(AuthToken(accessToken))
+                    } catch (e: Exception) {
+                        continuation.resumeWithException(e)
+                    }
+                }
             }
         }
+
+        return execute(accessToken)
     }
 
     companion object {
