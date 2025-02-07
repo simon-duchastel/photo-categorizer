@@ -1,6 +1,8 @@
 package com.duchastel.simon.photocategorizer.screens.photoswiper
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,6 +21,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -122,15 +125,36 @@ private fun PhotoSwiperContent(
     if (photos.isEmpty()) return
     Column(modifier = Modifier.fillMaxSize()) {
         val pagerState = rememberPagerState(pageCount = { photos.size })
-        val userScrollEnabled by remember {
-            derivedStateOf {
-                pagerState.currentPageOffsetFraction <= 0
-            }
-        }
 
         VerticalPager(
             state = pagerState,
-            userScrollEnabled = userScrollEnabled,
+            modifier = Modifier.pointerInput(Unit) {
+                awaitEachGesture {
+                    val currentPageOffsetFraction = pagerState.currentPageOffsetFraction
+
+                    val isUpwardsScroll = currentPageOffsetFraction < 0
+                    val down = awaitFirstDown(pass = PointerEventPass.Initial)
+                    if (isUpwardsScroll) {
+                        // block upwards scrolling
+                        down.consume()
+                    }
+
+                    do {
+                        val event: PointerEvent = awaitPointerEvent(
+                            pass = PointerEventPass.Initial
+                        )
+
+                        event.changes.forEach {
+                            val diffY = it.position.y - it.previousPosition.y
+                            if (diffY > 0) {
+                                // block upwards paging
+                                it.consume()
+                            }
+                        }
+
+                    } while (event.changes.any { it.pressed })
+                }
+            },
         ) { page ->
             val photoUri = photos[page].displayUrl
             AsyncImage(
