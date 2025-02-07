@@ -116,6 +116,7 @@ private fun PhotoSwiperContent(
 
         VerticalPager(
             state = pagerState,
+            beyondViewportPageCount = 1, // pre-load 1 image after the current one
             modifier = Modifier.pointerInput(Unit) {
                 awaitEachGesture {
                     val currentPageOffsetFraction = pagerState.currentPageOffsetFraction
