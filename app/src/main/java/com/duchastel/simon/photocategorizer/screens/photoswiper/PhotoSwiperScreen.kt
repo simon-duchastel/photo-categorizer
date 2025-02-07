@@ -1,5 +1,6 @@
 package com.duchastel.simon.photocategorizer.screens.photoswiper
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -10,10 +11,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 
 @Composable
 fun PhotoSwiperScreen(
@@ -23,22 +22,29 @@ fun PhotoSwiperScreen(
     val state by viewModel.state.collectAsState()
 
     PhotoSwiperContent(
-        photoUris = state.photos.map { it.previewUrl },
+        photoUris = state.photos.map { it.displayUrl }.filterNotNull(),
+        onLogoutClicked = logout,
     )
-    Button(onClick = logout) { Text("Logout") }
 }
 
 @Composable
-private fun PhotoSwiperContent(photoUris: List<String>) {
-    Text("PHOTO SWIPER")
-    val pagerState = rememberPagerState(pageCount = { photoUris.size })
-    VerticalPager(state = pagerState) { page ->
-        val photoUri = photoUris[page]
-        AsyncImage(
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            model = photoUri,
-            contentDescription = "My photo",
-        )
+private fun PhotoSwiperContent(
+    photoUris: List<String>,
+    onLogoutClicked: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        val pagerState = rememberPagerState(pageCount = { photoUris.size })
+        VerticalPager(state = pagerState) { page ->
+            val photoUri = photoUris[page]
+            AsyncImage(
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                model = photoUri,
+                contentDescription = "Photo",
+            )
+        }
+
+        Button(onClick = onLogoutClicked) { Text("Logout") }
     }
 }

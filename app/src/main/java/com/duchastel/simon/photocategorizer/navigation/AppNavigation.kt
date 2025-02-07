@@ -19,16 +19,11 @@ import kotlinx.serialization.Serializable
 
 @Composable
 fun AppNavigation(viewModel: LoginViewModel = hiltViewModel()) {
-    LaunchedEffect(Unit) {
-        println("TODO NAV")
-    }
-
     val navController = rememberNavController()
     val state by viewModel.state.collectAsState()
 
     val isLoggedIn = state.isLoggedIn
     LaunchedEffect(isLoggedIn) {
-        println("TODO - $isLoggedIn")
         when (isLoggedIn) {
             true -> navController.navigate(PhotoSwiper)
             false -> navController.navigate(Login)
@@ -44,10 +39,12 @@ fun AppNavigation(viewModel: LoginViewModel = hiltViewModel()) {
             LoginScreen()
         }
         composable<PhotoSwiper> {
-            PhotoSwiperScreen(logout = {
-                viewModel.logout()
-                navController.navigate(Login)
-            })
+            PhotoSwiperScreen(
+                logout = {
+                    viewModel.logout()
+                    navController.navigate(Login)
+                }
+            )
         }
     }
 }

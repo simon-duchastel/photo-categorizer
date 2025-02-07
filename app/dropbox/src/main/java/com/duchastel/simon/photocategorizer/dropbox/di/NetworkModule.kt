@@ -3,6 +3,7 @@ package com.duchastel.simon.photocategorizer.dropbox.di
 import com.duchastel.simon.photocategorizer.auth.AuthManager
 import com.duchastel.simon.photocategorizer.auth.AccessTokenAuthInterceptor
 import com.duchastel.simon.photocategorizer.auth.LoggedOutInterceptor
+import com.duchastel.simon.photocategorizer.dropbox.network.DROPBOX_API_BASE_URL
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
 import com.squareup.moshi.Moshi
 import dagger.Module
@@ -77,7 +78,7 @@ object NetworkModule {
         @Dropbox moshi: Moshi,
     ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://api.dropboxapi.com/2/")
+            .baseUrl(DROPBOX_API_BASE_URL)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .client(okHttpClient)
             .build()
