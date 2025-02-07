@@ -8,6 +8,7 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.duchastel.simon.photocategorizer.auth.AuthManager
 import com.duchastel.simon.photocategorizer.auth.AuthToken
+import com.duchastel.simon.photocategorizer.dropbox.network.DROPBOX_CLIENT_ID
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,7 +66,7 @@ internal class DropboxAuthManager @Inject constructor(
         try {
             val loginRequest = AuthorizationRequest.Builder(
                 /* configuration = */ config,
-                /* clientId = */ CLIENT_ID,
+                /* clientId = */ DROPBOX_CLIENT_ID,
                 /* responseType = */ "code",
                 /* redirectUri = */ REDIRECT_URI,
             ).build()
@@ -216,8 +217,6 @@ internal class DropboxAuthManager @Inject constructor(
     // Constants
 
     companion object {
-        private const val CLIENT_ID = "qlq2l578dxtpcum"
-
         private val AUTH_ENDPOINT = "https://www.dropbox.com/oauth2/authorize".toUri()
         private val TOKEN_ENDPOINT = "https://www.dropbox.com/oauth2/token".toUri()
         private val REDIRECT_URI = "https://duchastel.com".toUri()
