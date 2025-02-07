@@ -13,12 +13,13 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEvent
@@ -42,9 +43,9 @@ fun PhotoSwiperScreen(
 
     PhotoSwiperContent(
         photos = state.photos.filter { it.displayUrl != null },
+        processPhoto = viewModel::processPhoto,
         onLogoutClicked = logout,
     )
-//    SwipeScreen(photos = state.photos.filter { it.displayUrl != null })
 }
 
 @Composable
@@ -92,39 +93,26 @@ fun SwipeCard(
 }
 
 @Composable
-fun SwipeScreen(photos: List<DisplayPhoto>) {
-    if (photos.isEmpty()) return
-    var swipeMessage by remember { mutableStateOf("Swipe a card!") }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        Text(swipeMessage)
-        SwipeCard(
-            cardContent = {
-                AsyncImage(
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    model = photos.first().displayUrl,
-                    contentDescription = "Photo",
-                )
-            },
-            onSwipeLeft = {
-                swipeMessage = "Swiped Left!"
-            },
-            onSwipeRight = {
-                swipeMessage = "Swiped Right!"
-            }
-        )
-    }
-}
-
-@Composable
 private fun PhotoSwiperContent(
     photos: List<DisplayPhoto>,
+    processPhoto: (DisplayPhoto) -> Unit,
     onLogoutClicked: () -> Unit
 ) {
     if (photos.isEmpty()) return
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Button(onClick = onLogoutClicked) { Text("Logout") }
+
         val pagerState = rememberPagerState(pageCount = { photos.size })
+        LaunchedEffect(pagerState, photos) {
+            snapshotFlow { pagerState.settledPage }.collect { page ->
+                if (page > 0) {
+                    processPhoto(photos[page - 1])
+                }
+            }
+        }
 
         VerticalPager(
             state = pagerState,
@@ -156,15 +144,20 @@ private fun PhotoSwiperContent(
                 }
             },
         ) { page ->
-            val photoUri = photos[page].displayUrl
-            AsyncImage(
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                model = photoUri,
-                contentDescription = "Photo",
+            val photo = photos[page]
+            SwipeCard(
+                cardContent = {
+                    AsyncImage(
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        model = photo.displayUrl,
+                        contentDescription = photo.path,
+                    )
+                },
+                onSwipeRight = { },
+                onSwipeLeft = { }
             )
-        }
 
-        Button(onClick = onLogoutClicked) { Text("Logout") }
+        }
     }
 }
