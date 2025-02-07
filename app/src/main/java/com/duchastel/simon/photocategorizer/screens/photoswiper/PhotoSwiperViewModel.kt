@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,24 +32,31 @@ class PhotoSwiperViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            _state.collect {
-                syncDisplayUrls(it.photos)
-            }
+            fun State.foo() = (photos.map { f -> f.path } to photoIndex)
+            _state
+                .distinctUntilChanged { old, new -> old.foo() == new.foo() }
+                .collectLatest {
+                    syncDisplayUrls(
+                        photos = it.photos,
+                        photoIndex = it.photoIndex,
+                    )
+                }
         }
     }
 
     fun processPhoto(photo: DisplayPhoto) {
         _state.update { oldState ->
-            println("TODO PROCESSING ${_state.value.photos.indexOf(photo)}")
-            oldState.copy(photos = oldState.photos.filter { it != photo })
+            oldState.copy(photoIndex = oldState.photos.indexOf(photo))
         }
     }
 
     private suspend fun syncDisplayUrls(
         photos: List<DisplayPhoto>,
+        photoIndex: Int,
     ) = coroutineScope {
         photos
-            .take(10)
+            .drop(photoIndex)
+            .take(PHOTO_BUFFER_SIZE)
             .filter { it.displayUrl == null }
             .map { photo ->
                 async {
@@ -69,10 +78,15 @@ class PhotoSwiperViewModel @Inject constructor(
 
     data class State(
         val photos: List<DisplayPhoto> = emptyList(),
+        val photoIndex: Int = 0,
     )
 
     data class DisplayPhoto(
         val path: String,
         val displayUrl: String?
     )
+
+    companion object {
+        const val PHOTO_BUFFER_SIZE = 10
+    }
 }
