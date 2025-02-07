@@ -6,13 +6,12 @@ import android.content.Intent
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import com.duchastel.simon.photocategorizer.auth.AuthProvider
+import com.duchastel.simon.photocategorizer.auth.AuthManager
 import com.duchastel.simon.photocategorizer.auth.AuthToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -33,9 +32,9 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 @Singleton
-internal class DropboxAuthProvider @Inject constructor(
+internal class DropboxAuthManager @Inject constructor(
     @ApplicationContext private val context: Context,
-): AuthProvider {
+): AuthManager {
 
     // State and config
 
@@ -187,7 +186,7 @@ internal class DropboxAuthProvider @Inject constructor(
 
     /**
      * Wrapper class to prevent calls to [AuthState.update].
-     * [AuthProvider] must be able to observe all changes to AuthState,
+     * [AuthManager] must be able to observe all changes to AuthState,
      * so immutable data must be used
      */
     private data class State(
