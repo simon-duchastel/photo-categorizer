@@ -9,6 +9,10 @@ import androidx.core.net.toUri
 import com.duchastel.simon.photocategorizer.auth.AuthProvider
 import com.duchastel.simon.photocategorizer.auth.AuthToken
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationException.TYPE_GENERAL_ERROR
@@ -16,6 +20,8 @@ import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
+import net.openid.appauth.TokenResponse
+import org.json.JSONException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -36,17 +42,19 @@ internal class DropboxAuthProvider @Inject constructor(
 
     private val config: AuthorizationServiceConfiguration =
         AuthorizationServiceConfiguration(AUTH_ENDPOINT, TOKEN_ENDPOINT)
-    private val authService = AuthorizationService(context);
+    private val authService = AuthorizationService(context)
 
-    private var authState: AuthState = sharedPreferences.getString(
-        "AUTH_STATE",
-        null
-    )?.let { AuthState.jsonDeserialize(it) } ?: AuthState(config)
+    private val loggedOutAuthState = State(AuthState(config))
+    private val state = MutableStateFlow(readAuthState())
 
     // Public functions
 
     override fun isLoggedIn(): Boolean {
-        return authState.isAuthorized
+        return state.value.isLoggedIn
+    }
+
+    override fun isLoggedInFlow(): Flow<Boolean> {
+        return state.map { it.isLoggedIn }
     }
 
     override fun login(redirectIntent: PendingIntent) {
@@ -64,8 +72,7 @@ internal class DropboxAuthProvider @Inject constructor(
     }
 
     override fun logout() {
-        authState = AuthState(config)
-        writeAuthState()
+        updateAuthStateToLoggedOut()
     }
 
     override fun processIntent(intent: Intent) {
@@ -75,14 +82,12 @@ internal class DropboxAuthProvider @Inject constructor(
         // if both are null, this intent isn't an auth intent
         if (authResponse == null && authError == null) return
 
-        authState.update(authResponse, authError)
-        writeAuthState()
+        updateAuthState(authResponse, authError)
         if (authResponse != null) {
             authService.performTokenRequest(
                 authResponse.createTokenExchangeRequest(),
-            ) { resp, ex ->
-                authState.update(resp, ex)
-                writeAuthState()
+            ) { response, error ->
+                updateAuthState(response, error)
             }
         }
     }
@@ -91,15 +96,14 @@ internal class DropboxAuthProvider @Inject constructor(
         execute: suspend (authToken: AuthToken) -> T,
     ): T {
         val authToken: AuthToken = suspendCoroutine { continuation ->
-            authState.accessToken.apply {
-                if (this != null) {
-                    continuation.resume(AuthToken(this))
+            state.value.authState.accessToken.let {
+                if (it != null) {
+                    continuation.resume(AuthToken(it))
                 } else {
                     continuation.resumeWithException(USER_NOT_SIGNED_IN_EXCEPTION)
                 }
             }
         }
-        writeAuthState()
 
         return execute(authToken)
     }
@@ -108,7 +112,81 @@ internal class DropboxAuthProvider @Inject constructor(
 
     private fun writeAuthState() {
         sharedPreferences.edit(commit = true) {
-            putString("AUTH_STATE", authState.jsonSerializeString())
+            putString(PREFS_AUTH_STATE, state.value.toJsonString())
+        }
+    }
+
+    private fun readAuthState(): State {
+        val jsonString = sharedPreferences.getString(PREFS_AUTH_STATE, null)
+        return jsonString?.let { State.fromJsonString(it) } ?: loggedOutAuthState
+    }
+
+    private fun updateAuthStateToLoggedOut() {
+        synchronized(state) {
+            state.update { loggedOutAuthState }
+            writeAuthState()
+        }
+    }
+
+    private fun updateAuthState(
+       response: AuthorizationResponse?,
+       error: AuthorizationException?,
+    ) {
+        synchronized(state) {
+            state.update { oldState ->
+                val authState = oldState.authState.apply {
+                    update(response, error)
+                }
+                oldState.copy(
+                    authState = authState,
+                    isLoggedIn = authState.isAuthorized,
+                )
+            }
+            writeAuthState()
+        }
+    }
+
+    private fun updateAuthState(
+        response: TokenResponse?,
+        error: AuthorizationException?,
+    ) {
+        synchronized(state) {
+            state.update { oldState ->
+                val authState = oldState.authState.apply {
+                    update(response, error)
+                }
+                oldState.copy(
+                    authState = authState,
+                    isLoggedIn = authState.isAuthorized,
+                )
+            }
+            writeAuthState()
+        }
+    }
+
+    /**
+     * Wrapper class to prevent calls to [AuthState.update].
+     * [AuthProvider] must be able to observe all changes to AuthState,
+     * so immutable data must be used
+     */
+    private data class State(
+        val authState: AuthState,
+        val isLoggedIn: Boolean = authState.isAuthorized,
+    ) {
+        fun toJsonString(): String {
+            return authState.jsonSerializeString()
+        }
+
+        companion object {
+            fun fromJsonString(jsonString: String): State? {
+                return try {
+                    AuthState.jsonDeserialize(jsonString)?.let { State(it) }
+                } catch (ex: IllegalArgumentException) {
+                    null
+                } catch (ex: JSONException) {
+                    null
+                }
+            }
         }
     }
 
@@ -120,6 +198,8 @@ internal class DropboxAuthProvider @Inject constructor(
         private val AUTH_ENDPOINT = "https://www.dropbox.com/oauth2/authorize".toUri()
         private val TOKEN_ENDPOINT = "https://www.dropbox.com/oauth2/token".toUri()
         private val REDIRECT_URI = "https://duchastel.com".toUri()
+
+        private const val PREFS_AUTH_STATE = "AUTH_STATE"
 
         private val USER_NOT_SIGNED_IN_EXCEPTION = AuthorizationException(
             /* type = */ TYPE_GENERAL_ERROR,

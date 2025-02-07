@@ -3,12 +3,18 @@ package com.duchastel.simon.photocategorizer.auth
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
+import kotlinx.coroutines.flow.Flow
 
 interface AuthProvider {
     /**
      * Returns true if the user is currently logged in, false otherwise.
      */
     fun isLoggedIn(): Boolean
+
+    /**
+     * Same as [isLoggedIn], but as a flow of logged in events.
+     */
+    fun isLoggedInFlow(): Flow<Boolean>
 
     /**
      * Begins the login flow. Note that this may launch a Chrome Custom Tab to login the user,
