@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperViewModel.DisplayPhoto
+import com.duchastel.simon.photocategorizer.ui.components.SwipeCard
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -48,49 +49,6 @@ fun PhotoSwiperScreen(
     )
 }
 
-@Composable
-fun SwipeCard(
-    modifier: Modifier = Modifier,
-    cardContent: @Composable () -> Unit,
-    onSwipeLeft: () -> Unit,
-    onSwipeRight: () -> Unit
-) {
-    val coroutineScope = rememberCoroutineScope()
-    val offsetX = remember { Animatable(0f) }
-    val swipeThreshold = 300f
-
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures { _, dragAmount ->
-                    coroutineScope.launch {
-                        offsetX.snapTo(targetValue = offsetX.value + dragAmount)
-                    }
-                }
-            }
-            .offset { IntOffset(offsetX.value.roundToInt(), 0) }
-            .graphicsLayer {
-                rotationZ = offsetX.value / 15f
-            }
-            .onGloballyPositioned {
-                // Handle swipe actions
-                if (offsetX.value > swipeThreshold) {
-                    onSwipeRight()
-                    coroutineScope.launch {
-                        offsetX.snapTo(0f)
-                    }
-                } else if (offsetX.value < -swipeThreshold) {
-                    onSwipeLeft()
-                    coroutineScope.launch {
-                        offsetX.snapTo(0f)
-                    }
-                }
-            }
-    ) {
-        cardContent()
-    }
-}
 
 @Composable
 private fun PhotoSwiperContent(
@@ -98,14 +56,15 @@ private fun PhotoSwiperContent(
     processPhoto: (DisplayPhoto) -> Unit,
     onLogoutClicked: () -> Unit
 ) {
-    if (photos.isEmpty()) return
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Button(onClick = onLogoutClicked) { Text("Logout") }
 
+        if (photos.isEmpty()) return
         val pagerState = rememberPagerState(pageCount = { photos.size })
+        val coroutineScale = rememberCoroutineScope()
         LaunchedEffect(pagerState, photos) {
             snapshotFlow { pagerState.settledPage }.collect { page ->
                 if (page > 0) {
@@ -116,7 +75,7 @@ private fun PhotoSwiperContent(
 
         VerticalPager(
             state = pagerState,
-            beyondViewportPageCount = 1, // pre-load 1 image after the current one
+            beyondViewportPageCount = 2, // pre-load 2 images after the current one
             modifier = Modifier.pointerInput(Unit) {
                 awaitEachGesture {
                     val currentPageOffsetFraction = pagerState.currentPageOffsetFraction
@@ -147,7 +106,7 @@ private fun PhotoSwiperContent(
         ) { page ->
             val photo = photos[page]
             SwipeCard(
-                cardContent = {
+                content = {
                     AsyncImage(
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
@@ -155,8 +114,16 @@ private fun PhotoSwiperContent(
                         contentDescription = photo.path,
                     )
                 },
-                onSwipeRight = { },
-                onSwipeLeft = { }
+                onSwipeRight = {
+                    coroutineScale.launch {
+                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                    }
+                },
+                onSwipeLeft = {
+                    coroutineScale.launch {
+                        pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                    }
+                }
             )
 
         }
