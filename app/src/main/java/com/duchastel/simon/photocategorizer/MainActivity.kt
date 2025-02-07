@@ -68,17 +68,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         authProvider.processIntent(intent)
 
+        println("TODO - ON CREATE")
+
         enableEdgeToEdge()
         setContent {
-            val scope = rememberCoroutineScope()
-            var timer: Int by remember { mutableIntStateOf(1) }
-            LaunchedEffect(scope) {
-                while (timer > 0) {
-                    delay(1000)
-                    timer -= 1
-                }
-            }
-
             PhotoCategorizerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize().padding(16.dp)) { innerPadding ->
                     Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {

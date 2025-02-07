@@ -8,6 +8,7 @@ import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,6 +25,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             authProvider
                 .isLoggedInFlow()
+                .distinctUntilChanged()
                 .collect { isLoggedIn ->
                     _state.update { oldState -> oldState.copy(isLoggedIn = isLoggedIn) }
                 }
@@ -31,7 +33,11 @@ class LoginViewModel @Inject constructor(
     }
 
     fun login(redirectIntent: PendingIntent) {
-        authProvider.login(redirectIntent)
+        viewModelScope.launch {
+            _state.update { oldState -> oldState.copy(loginInProgress = true) }
+            authProvider.login(redirectIntent)
+            _state.update { oldState -> oldState.copy(loginInProgress = false) }
+        }
     }
 
     fun logout() {
@@ -40,5 +46,6 @@ class LoginViewModel @Inject constructor(
 
     data class State(
         val isLoggedIn: Boolean? = null,
+        val loginInProgress: Boolean = false,
     )
 }

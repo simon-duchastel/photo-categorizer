@@ -19,10 +19,10 @@ interface AuthProvider {
     /**
      * Begins the login flow. Note that this may launch a Chrome Custom Tab to login the user,
      * so expect this to potentially cause the user to leave your activity.
+     *
+     * Returns true if the user successfully logged in, false otherwise.
      */
-    fun login(
-        redirectIntent: PendingIntent
-    )
+    suspend fun login(redirectIntent: PendingIntent): Boolean
 
     /**
      * Logout the current user.

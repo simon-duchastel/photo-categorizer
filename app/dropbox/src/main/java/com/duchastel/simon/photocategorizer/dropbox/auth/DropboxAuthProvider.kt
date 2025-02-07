@@ -11,7 +11,11 @@ import com.duchastel.simon.photocategorizer.auth.AuthToken
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
@@ -54,21 +58,30 @@ internal class DropboxAuthProvider @Inject constructor(
     }
 
     override fun isLoggedInFlow(): Flow<Boolean> {
-        return state.map { it.isLoggedIn }
+        return state.map { it.isLoggedIn }.distinctUntilChanged()
     }
 
-    override fun login(redirectIntent: PendingIntent) {
-        val loginRequest = AuthorizationRequest.Builder(
-            /* configuration = */ config,
-            /* clientId = */ CLIENT_ID,
-            /* responseType = */ "code",
-            /* redirectUri = */ REDIRECT_URI,
-        ).build()
+    override suspend fun login(redirectIntent: PendingIntent): Boolean {
+        state.update { oldState -> oldState.copy(loginResult = null) }
+        try {
+            val loginRequest = AuthorizationRequest.Builder(
+                /* configuration = */ config,
+                /* clientId = */ CLIENT_ID,
+                /* responseType = */ "code",
+                /* redirectUri = */ REDIRECT_URI,
+            ).build()
 
-        authService.performAuthorizationRequest(
-            loginRequest,
-            redirectIntent,
-        )
+            authService.performAuthorizationRequest(
+                loginRequest,
+                redirectIntent,
+            )
+
+            // wait for the loginResult to complete
+            return state.mapNotNull { it.loginResult != null }.first()
+        } finally {
+            // for consistency, null out the state if an exception is thrown
+            state.update { oldState -> oldState.copy(loginResult = null) }
+        }
     }
 
     override fun logout() {
@@ -140,6 +153,10 @@ internal class DropboxAuthProvider @Inject constructor(
                 oldState.copy(
                     authState = authState,
                     isLoggedIn = authState.isAuthorized,
+
+                    // error means the login failed, but authorization success
+                    // doesn't mean the full login succeeded yet
+                    loginResult = if (error == null) false else null,
                 )
             }
             writeAuthState()
@@ -158,6 +175,10 @@ internal class DropboxAuthProvider @Inject constructor(
                 oldState.copy(
                     authState = authState,
                     isLoggedIn = authState.isAuthorized,
+
+                    // token response is the last step for login, so a success
+                    // here means the entire login succeeded
+                    loginResult = response != null && error == null,
                 )
             }
             writeAuthState()
@@ -172,6 +193,9 @@ internal class DropboxAuthProvider @Inject constructor(
     private data class State(
         val authState: AuthState,
         val isLoggedIn: Boolean = authState.isAuthorized,
+
+        // null if no login in progress, true if login succeeded, false otherwise
+        val loginResult: Boolean? = null,
     ) {
         fun toJsonString(): String {
             return authState.jsonSerializeString()
