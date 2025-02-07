@@ -37,10 +37,9 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.runtime.android)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.material3.android)
+    implementation(libs.androidx.material3)
     implementation(libs.okhttp)
     implementation(libs.coil.compose)
 
