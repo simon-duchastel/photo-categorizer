@@ -18,12 +18,17 @@ import com.duchastel.simon.photocategorizer.screens.splash.SplashScreen
 import kotlinx.serialization.Serializable
 
 @Composable
-fun AppNavigation(viewModel: LoginViewModel = hiltViewModel(), ) {
-    val navController = rememberNavController()
+fun AppNavigation(viewModel: LoginViewModel = hiltViewModel()) {
+    LaunchedEffect(Unit) {
+        println("TODO NAV")
+    }
 
+    val navController = rememberNavController()
     val state by viewModel.state.collectAsState()
+
     val isLoggedIn = state.isLoggedIn
     LaunchedEffect(isLoggedIn) {
+        println("TODO - $isLoggedIn")
         when (isLoggedIn) {
             true -> navController.navigate(PhotoSwiper)
             false -> navController.navigate(Login)

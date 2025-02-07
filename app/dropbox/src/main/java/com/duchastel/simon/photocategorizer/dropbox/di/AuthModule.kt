@@ -1,8 +1,8 @@
 package com.duchastel.simon.photocategorizer.dropbox.di
 
 import android.content.Context
-import com.duchastel.simon.photocategorizer.auth.AuthProvider
-import com.duchastel.simon.photocategorizer.dropbox.auth.DropboxAuthProvider
+import com.duchastel.simon.photocategorizer.auth.AuthManager
+import com.duchastel.simon.photocategorizer.dropbox.auth.DropboxAuthManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,7 +19,7 @@ object AuthModule {
     @Singleton
     fun provideDropboxAuthProvider(
         @ApplicationContext context: Context
-    ): AuthProvider {
-        return DropboxAuthProvider(context)
+    ): AuthManager {
+        return DropboxAuthManager(context)
     }
 }

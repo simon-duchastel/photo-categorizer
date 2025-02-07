@@ -6,14 +6,14 @@ import okhttp3.Response
 import java.io.IOException
 
 class AccessTokenAuthInterceptor(
-    private val authProvider: AuthProvider,
+    private val authManager: AuthManager,
 ) : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val authedRequest = try {
             runBlocking {
-                authProvider.executeWithAuthToken { token ->
+                authManager.executeWithAuthToken { token ->
                     request.newBuilder()
                         .header("Authorization", "Bearer ${token.accessToken}")
                         .build()
