@@ -36,6 +36,13 @@ class PhotoSwiperViewModel @Inject constructor(
         }
     }
 
+    fun processPhoto(photo: DisplayPhoto) {
+        _state.update { oldState ->
+            println("TODO PROCESSING ${_state.value.photos.indexOf(photo)}")
+            oldState.copy(photos = oldState.photos.filter { it != photo })
+        }
+    }
+
     private suspend fun syncDisplayUrls(
         photos: List<DisplayPhoto>,
     ) = coroutineScope {
