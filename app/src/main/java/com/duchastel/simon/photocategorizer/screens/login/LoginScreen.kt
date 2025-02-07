@@ -26,10 +26,6 @@ import com.duchastel.simon.photocategorizer.MainActivity
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
-    LaunchedEffect(Unit) {
-        println("TODO - Login")
-    }
-
     val state by viewModel.state.collectAsState()
 
     val context = LocalContext.current
