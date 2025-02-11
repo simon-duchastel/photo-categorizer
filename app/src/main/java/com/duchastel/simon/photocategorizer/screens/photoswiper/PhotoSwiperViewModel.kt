@@ -32,9 +32,9 @@ class PhotoSwiperViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            fun State.foo() = (photos.map { f -> f.path } to photoIndex)
+            fun State.photoKeys() = (photos.map { f -> f.path } to photoIndex)
             _state
-                .distinctUntilChanged { old, new -> old.foo() == new.foo() }
+                .distinctUntilChanged { old, new -> old.photoKeys() == new.photoKeys() }
                 .collectLatest {
                     syncDisplayUrls(
                         photos = it.photos,
@@ -87,6 +87,6 @@ class PhotoSwiperViewModel @Inject constructor(
     )
 
     companion object {
-        const val PHOTO_BUFFER_SIZE = 10
+        const val PHOTO_BUFFER_SIZE = 3
     }
 }
