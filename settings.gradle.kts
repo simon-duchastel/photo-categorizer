@@ -21,7 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Photo Categorizer"
 include(":app")
-include(":app:auth")
-include(":app:filemanager")
-include(":app:dropbox")
-include(":app:storage")
+include(":app:modules:auth")
+include(":app:modules:filemanager")
+include(":app:modules:dropbox")
+include(":app:modules:storage")
