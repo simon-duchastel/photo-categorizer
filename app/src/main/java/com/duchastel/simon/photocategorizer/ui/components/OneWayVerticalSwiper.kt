@@ -28,12 +28,15 @@ fun <T> OneWayVerticalSwiper(
     onSwipe: (T) -> Unit,
     content: @Composable (T) -> Unit,
 ) {
-    if (items.isEmpty()) return
+    var currentIndex by remember { mutableIntStateOf(0) }
+    val currentIndexSafe by remember(currentIndex) {
+        derivedStateOf { currentIndex.coerceAtMost(items.lastIndex) }
+    }
+    if (currentIndex > items.lastIndex) return // don't render with no elements left
 
     var containerHeight by remember { mutableIntStateOf(0) }
     val threshold by remember(containerHeight) { derivedStateOf { containerHeight / 2.5f } }
 
-    var currentIndex by remember { mutableIntStateOf(0) }
     var offsetY by remember { mutableFloatStateOf(0f) }
     var isAnimating by remember { mutableStateOf(false) }
 
@@ -41,7 +44,7 @@ fun <T> OneWayVerticalSwiper(
         targetValue = if (isAnimating) {
             containerHeight * -1.25f // make sure we go past the top of the container
         } else {
-            offsetY.coerceIn(-threshold..0f)
+            offsetY.coerceIn(-threshold..0f) // don't scroll past the threshold
         },
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
@@ -67,7 +70,7 @@ fun <T> OneWayVerticalSwiper(
                     onDragEnd = {
                         if (offsetY < -threshold) {
                             isAnimating = true
-                            onSwipe(items[currentIndex])
+                            onSwipe(items[currentIndexSafe])
                         } else {
                             // Reset position without changing indices
                             offsetY = 0f
@@ -83,7 +86,6 @@ fun <T> OneWayVerticalSwiper(
                 )
             }
     ) {
-        // Current content
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -94,7 +96,7 @@ fun <T> OneWayVerticalSwiper(
                     )
                 }
         ) {
-            content(items[currentIndex])
+            content(items[currentIndexSafe])
         }
     }
 }

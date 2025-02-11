@@ -36,16 +36,19 @@ private fun PhotoSwiperContent(
     OneWayVerticalSwiper(
         modifier = Modifier.fillMaxSize(),
         items = photos,
-        onSwipe = {
+        onSwipe = { photo ->
             Toast.makeText(context, "Swipe Up", Toast.LENGTH_SHORT).show()
+            processPhoto(photo)
         },
     ) { photo ->
         HorizontalSwiper(
             onSwipeLeft = {
                 Toast.makeText(context, "Swipe left", Toast.LENGTH_SHORT).show()
+                processPhoto(photo)
             },
             onSwipeRight = {
                 Toast.makeText(context, "Swipe Right", Toast.LENGTH_SHORT).show()
+                processPhoto(photo)
             },
         ) {
             AsyncImage(
