@@ -1,68 +1,101 @@
 package com.duchastel.simon.photocategorizer.ui.components
 
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.pager.PagerScope
-import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerEvent
-import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @Composable
 fun <T> OneWayVerticalSwiper(
     modifier: Modifier = Modifier,
     items: List<T>,
     onSwipe: (T) -> Unit,
-    content: @Composable PagerScope.(T, PagerState) -> Unit,
+    content: @Composable (T) -> Unit,
 ) {
     if (items.isEmpty()) return
-    val pagerState = rememberPagerState(pageCount = { items.size })
-    LaunchedEffect(pagerState, items) {
-        snapshotFlow { pagerState.settledPage }.collect { page ->
-            if (page > 0) {
-                onSwipe(items[page - 1])
+
+    val threshold = 1000f
+    var offsetY by remember { mutableFloatStateOf(0f) }
+    var showNewContent by remember { mutableStateOf(false) }
+    val animatedOffset by animateFloatAsState(
+        targetValue = if (showNewContent) -threshold else offsetY,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "OneWayVerticalSwiperOffset"
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                coroutineScope {
+                    launch {
+                        detectVerticalDragGestures(
+                            onDragEnd = {
+                                if (offsetY < -threshold) {
+                                    showNewContent = true
+                                    onSwipe(items.first())
+                                } else {
+                                    // Reset position
+                                    offsetY = 0f
+                                    showNewContent = false
+                                }
+                            },
+                            onVerticalDrag = { change, dragAmount ->
+                                change.consume()
+                                // Only allow upward scrolling (negative dragAmount)
+                                if (dragAmount < 0 || offsetY < 0) {
+                                    offsetY = (offsetY + dragAmount).coerceAtMost(0f)
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .offset {
+                    IntOffset(
+                        x = 0,
+                        y = animatedOffset.roundToInt()
+                    )
+                }
+        ) {
+            content(items.first())
+        }
+
+        if (showNewContent) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset {
+                        IntOffset(
+                            x = 0,
+                            y = (animatedOffset + threshold).roundToInt()
+                        )
+                    }
+            ) {
+                content(items.first())
             }
         }
-    }
-
-    VerticalPager(
-        state = pagerState,
-        beyondViewportPageCount = 2, // pre-load 2 items after the current one
-        modifier = modifier.pointerInput(Unit) {
-            awaitEachGesture {
-                val currentPageOffsetFraction = pagerState.currentPageOffsetFraction
-
-                val isUpwardsScroll = currentPageOffsetFraction < 0
-                val down = awaitFirstDown(pass = PointerEventPass.Initial)
-                if (isUpwardsScroll) {
-                    // block upwards scrolling
-                    down.consume()
-                }
-
-                do {
-                    val event: PointerEvent = awaitPointerEvent(
-                        pass = PointerEventPass.Initial
-                    )
-
-                    event.changes.forEach {
-                        val diffY = it.position.y - it.previousPosition.y
-                        if (diffY > 0) {
-                            // block upwards paging
-                            it.consume()
-                        }
-                    }
-
-                } while (event.changes.any { it.pressed })
-            }
-        },
-    ) { page ->
-        val item = items[page]
-        content(item, pagerState)
     }
 }

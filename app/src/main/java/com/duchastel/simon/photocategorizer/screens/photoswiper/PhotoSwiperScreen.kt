@@ -12,6 +12,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperViewModel.DisplayPhoto
 import com.duchastel.simon.photocategorizer.ui.components.HorizontalSwiper
+import com.duchastel.simon.photocategorizer.ui.components.OneWayVerticalSwiper
 
 @Composable
 fun PhotoSwiperScreen(
@@ -32,20 +33,44 @@ private fun PhotoSwiperContent(
 ) {
     if (photos.isEmpty()) return
     val context = LocalContext.current
-    HorizontalSwiper(
-        onSwipeLeft = {
-            Toast.makeText(context, "Swipe left", Toast.LENGTH_SHORT).show()
+//    HorizontalSwiper(
+//        onSwipeLeft = {
+//            Toast.makeText(context, "Swipe left", Toast.LENGTH_SHORT).show()
+//        },
+//        onSwipeRight = {
+//            Toast.makeText(context, "Swipe Right", Toast.LENGTH_SHORT).show()
+//        },
+//    ) {
+//        AsyncImage(
+//            modifier = Modifier.fillMaxSize(),
+//            contentScale = ContentScale.Crop,
+//            model = photos[0].displayUrl,
+//            contentDescription = photos[0].path,
+//        )
+//    }
+
+    OneWayVerticalSwiper(
+        modifier = Modifier.fillMaxSize(),
+        items = photos,
+        onSwipe = {
+            Toast.makeText(context, "Swipe Up", Toast.LENGTH_SHORT).show()
         },
-        onSwipeRight = {
-            Toast.makeText(context, "Swipe Right", Toast.LENGTH_SHORT).show()
-        },
-    ) {
-        AsyncImage(
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop,
-            model = photos[0].displayUrl,
-            contentDescription = photos[0].path,
-        )
+    ) { photo ->
+        HorizontalSwiper(
+            onSwipeLeft = {
+                Toast.makeText(context, "Swipe left", Toast.LENGTH_SHORT).show()
+            },
+            onSwipeRight = {
+                Toast.makeText(context, "Swipe Right", Toast.LENGTH_SHORT).show()
+            },
+        ) {
+            AsyncImage(
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                model = photo.displayUrl,
+                contentDescription = photo.path,
+            )
+        }
     }
 
 //    val coroutineScope = rememberCoroutineScope()
