@@ -43,11 +43,11 @@ android {
 }
 
 dependencies {
-    implementation(project(":app:auth"))
-    implementation(project(":app:filemanager"))
-    implementation(project(":app:storage"))
+    implementation(project(":app:modules:auth"))
+    implementation(project(":app:modules:filemanager"))
+    implementation(project(":app:modules:storage"))
 
-    implementation(project(":app:dropbox"))
+    implementation(project(":app:modules:dropbox"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -35,8 +35,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":app:auth"))
-    implementation(project(":app:filemanager"))
+    implementation(project(":app:modules:auth"))
+    implementation(project(":app:modules:filemanager"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
