@@ -3,7 +3,7 @@ package com.duchastel.simon.photocategorizer.screens.photoswiper
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
-import com.duchastel.simon.photocategorizer.filemanager.FileManager
+import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PhotoSwiperViewModel @Inject constructor(
-    @Dropbox private val fileManager: FileManager
+    @Dropbox private val photoRepository: PhotoRepository
 ) : ViewModel() {
 
     private val _state: MutableStateFlow<State> = MutableStateFlow(State())
@@ -26,7 +26,7 @@ class PhotoSwiperViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val photos = fileManager.getPhotos()
+            val photos = photoRepository.getPhotos()
                 .map { DisplayPhoto(path = it.path, displayUrl = null) }
             _state.update { it.copy(photos = photos) }
         }
@@ -60,7 +60,7 @@ class PhotoSwiperViewModel @Inject constructor(
             .filter { it.displayUrl == null }
             .map { photo ->
                 async {
-                    val url = fileManager.getUnauthenticatedLinkForPhoto(photo.path)
+                    val url = photoRepository.getUnauthenticatedLinkForPhoto(photo.path)
                     _state.update { oldState ->
                         oldState.copy(
                             photos = oldState.photos.map { existingPhoto ->

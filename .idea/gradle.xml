@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$/app/auth" />
             <option value="$PROJECT_DIR$/app/dropbox" />
             <option value="$PROJECT_DIR$/app/filemanager" />
+            <option value="$PROJECT_DIR$/app/storage" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

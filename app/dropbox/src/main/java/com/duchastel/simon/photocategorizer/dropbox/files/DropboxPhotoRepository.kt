@@ -5,15 +5,15 @@ import com.duchastel.simon.photocategorizer.dropbox.network.FileTag
 import com.duchastel.simon.photocategorizer.dropbox.network.ListFolderContinueRequest
 import com.duchastel.simon.photocategorizer.dropbox.network.ListFolderRequest
 import com.duchastel.simon.photocategorizer.dropbox.network.TemporaryLinkRequest
-import com.duchastel.simon.photocategorizer.filemanager.FileManager
+import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import com.duchastel.simon.photocategorizer.filemanager.Photo
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class DropboxFileManager @Inject constructor(
+internal class DropboxPhotoRepository @Inject constructor(
     private val networkApi: DropboxFileApi,
-): FileManager {
+): PhotoRepository {
     override suspend fun getPhotos(): List<Photo> {
         val photos = mutableListOf<Photo>()
         var cursor: String? = null

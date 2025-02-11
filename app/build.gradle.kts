@@ -45,6 +45,8 @@ android {
 dependencies {
     implementation(project(":app:auth"))
     implementation(project(":app:filemanager"))
+    implementation(project(":app:storage"))
+
     implementation(project(":app:dropbox"))
 
     implementation(libs.androidx.core.ktx)
@@ -56,9 +58,9 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.coil.compose)
+    implementation(libs.kotlinx.serialization.json)
 
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)
