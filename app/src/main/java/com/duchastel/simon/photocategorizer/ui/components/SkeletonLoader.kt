@@ -25,38 +25,107 @@ import kotlin.random.Random
 @Composable
 fun SkeletonLoader(
     modifier: Modifier = Modifier,
-    spacing: Dp = 12.dp,
-    barHeight: Dp = 16.dp
+    blockSpacing: Dp = 24.dp,
+    groupSpacing: Dp = 12.dp,
+    barHeight: Dp = 16.dp,
+    blockHeight: Dp = 120.dp,
+    bottomSpacing: Dp = 32.dp
 ) {
-    // Calculate number of bars based on available height
     val density = LocalDensity.current
     var containerHeight by remember { mutableIntStateOf(0) }
-    val numberOfBars by with(density) {
-        remember(containerHeight, spacing, barHeight) {
+
+    // Calculate number of block groups that can fit
+    val numberOfGroups by with(density) {
+        remember(containerHeight, blockSpacing, blockHeight, bottomSpacing) {
             derivedStateOf {
-                ((containerHeight / (barHeight + spacing).toPx()).toInt()).coerceAtLeast(1)
+                val totalGroupHeight = blockHeight + (barHeight * 3) + (groupSpacing * 3)
+                val availableHeight = containerHeight - bottomSpacing.toPx()
+                (availableHeight / totalGroupHeight.toPx()).toInt().coerceAtLeast(1)
             }
         }
-    }
-
-    // Random widths for bars between 60% and 95%
-    val randomWidths = remember(numberOfBars) {
-        List(numberOfBars) { Random.nextFloat() * 0.35f + 0.6f }
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .onSizeChanged { containerHeight = it.height },
-        verticalArrangement = Arrangement.spacedBy(spacing)
+        verticalArrangement = Arrangement.spacedBy(blockSpacing)
     ) {
-        repeat(numberOfBars) { index ->
+        repeat(numberOfGroups) {
+            SkeletonGroup(
+                modifier = Modifier.fillMaxWidth(),
+                blockHeight = blockHeight,
+                barHeight = barHeight,
+                groupSpacing = groupSpacing
+            )
+        }
+    }
+}
+
+@Composable
+private fun SkeletonGroup(
+    modifier: Modifier = Modifier,
+    blockHeight: Dp,
+    barHeight: Dp,
+    groupSpacing: Dp,
+    shimmerDelayMillis: Int = 0,
+) {
+    var containerWidth by remember { mutableIntStateOf(0) }
+    Column(
+        verticalArrangement = Arrangement.spacedBy(groupSpacing)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .onSizeChanged { containerWidth = it.width }
+                .height(blockHeight)
+                .clip(RoundedCornerShape(8.dp))
+                .background(
+                    shimmerBrush(
+                        delayMillis = shimmerDelayMillis,
+                        width = containerWidth.toFloat(),
+                    )
+                )
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(groupSpacing)
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(randomWidths[index])
+                    .fillMaxWidth(0.95f)
                     .height(barHeight)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(shimmerBrush(delayMillis = index * 150))
+                    .background(
+                        shimmerBrush(
+                            delayMillis = shimmerDelayMillis + 150, // offset 1st box by 150ms
+                            width = containerWidth.toFloat(),
+                        )
+                    )
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(barHeight)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(
+                        shimmerBrush(
+                            delayMillis = shimmerDelayMillis + 300, // offset 2nd box by 300ms
+                            width = containerWidth.toFloat(),
+                        )
+                    )
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(barHeight)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(
+                        shimmerBrush(
+                            delayMillis = shimmerDelayMillis + 450, // offset 2nd box by 450ms
+                            width = containerWidth.toFloat(),
+                        )
+                    )
             )
         }
     }

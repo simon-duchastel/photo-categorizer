@@ -14,10 +14,10 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun shimmerBrush(
+    width: Float = 2000f,
     delayMillis: Int = 0,
     durationMillis: Int = 1000,
 ): Brush {
-    val width = 1500f
     val colors = listOf(
         Color.LightGray.copy(alpha = 0.6f),
         Color.LightGray.copy(alpha = 0.2f),
