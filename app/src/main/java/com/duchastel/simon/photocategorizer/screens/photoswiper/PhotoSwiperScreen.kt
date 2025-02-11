@@ -31,6 +31,7 @@ private fun PhotoSwiperContent(
     processPhoto: (DisplayPhoto) -> Unit,
 ) {
     if (photos.isEmpty()) return
+    val context = LocalContext.current
     OneWayVerticalSwiper(
         modifier = Modifier.fillMaxSize(),
         items = photos,
