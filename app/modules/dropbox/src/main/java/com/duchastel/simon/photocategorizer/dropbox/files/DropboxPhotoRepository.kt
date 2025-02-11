@@ -7,6 +7,7 @@ import com.duchastel.simon.photocategorizer.dropbox.network.ListFolderRequest
 import com.duchastel.simon.photocategorizer.dropbox.network.TemporaryLinkRequest
 import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import com.duchastel.simon.photocategorizer.filemanager.Photo
+import com.duchastel.simon.photocategorizer.filemanager.SUPPORTED_FILE_EXTENSIONS
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +23,7 @@ internal class DropboxPhotoRepository @Inject constructor(
             val response = if (cursor == null) {
                 networkApi.listFolder(
                     ListFolderRequest(
-                        path = "id:QjViWc9B0fAAAAAAAAAjtg",
+                        path = "/camera uploads",
                     )
                 )
             } else {
@@ -32,6 +33,10 @@ internal class DropboxPhotoRepository @Inject constructor(
             photos += response.entries
                 .filter { it.tag == FileTag.FILE && it.pathLower != null && it.id != null }
                 .map { Photo(name = it.name, id = it.id!!, path = it.pathLower!!) }
+                .filter { photo ->
+                    // filter for photos that match one of the supported extensions
+                    SUPPORTED_FILE_EXTENSIONS.any { photo.path.endsWith(it) }
+                }
 
             cursor = response.cursor
         } while (response.hasMore)

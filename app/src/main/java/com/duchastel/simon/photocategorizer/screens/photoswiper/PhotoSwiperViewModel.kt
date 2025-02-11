@@ -2,18 +2,19 @@ package com.duchastel.simon.photocategorizer.screens.photoswiper
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil3.request.ImageRequest
 import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
 import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,8 +27,7 @@ class PhotoSwiperViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val photos = photoRepository.getPhotos()
-                .map { DisplayPhoto(path = it.path, displayUrl = null) }
+            val photos = photoRepository.getPhotos().map { DisplayPhoto(path = it.path) }
             _state.update { it.copy(photos = photos) }
         }
 
@@ -44,9 +44,21 @@ class PhotoSwiperViewModel @Inject constructor(
         }
     }
 
-    fun processPhoto(photo: DisplayPhoto) {
+    fun processPhoto(index: Int) {
         _state.update { oldState ->
-            oldState.copy(photoIndex = oldState.photos.indexOf(photo) + 1)
+            oldState.copy(photoIndex = index + 1)
+        }
+    }
+
+    fun attachImageRequest(photo: DisplayPhoto, request: ImageRequest) {
+        _state.update { oldState ->
+            oldState.copy(photos = oldState.photos.map { oldPhoto ->
+                if (oldPhoto.path == photo.path) {
+                    oldPhoto.copy(imageRequest = request)
+                } else {
+                    oldPhoto
+                }
+            })
         }
     }
 
@@ -83,10 +95,11 @@ class PhotoSwiperViewModel @Inject constructor(
 
     data class DisplayPhoto(
         val path: String,
-        val displayUrl: String?
+        val displayUrl: String? = null,
+        val imageRequest: ImageRequest? = null,
     )
 
     companion object {
-        const val PHOTO_BUFFER_SIZE = 3
+        const val PHOTO_BUFFER_SIZE = 5
     }
 }

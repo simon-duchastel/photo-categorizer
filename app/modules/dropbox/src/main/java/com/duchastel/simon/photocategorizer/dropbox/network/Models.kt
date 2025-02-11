@@ -6,7 +6,7 @@ import com.squareup.moshi.JsonClass
 @JsonClass(generateAdapter = true)
 data class ListFolderRequest(
     @Json(name = "path") val path: String,
-    @Json(name = "limit") val limit: Int? = null
+    @Json(name = "limit") val limit: Int? = 2000
 )
 
 @JsonClass(generateAdapter = true)

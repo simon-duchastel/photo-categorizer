@@ -5,6 +5,8 @@ interface PhotoRepository {
     suspend fun getUnauthenticatedLinkForPhoto(path: String): String
 }
 
+val SUPPORTED_FILE_EXTENSIONS: List<String> = listOf(".png", ".jpg")
+
 data class Photo(
     val name: String,
     val id: String,

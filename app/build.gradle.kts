@@ -38,6 +38,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }
@@ -60,6 +61,7 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.kotlinx.serialization.json)
 
     ksp(libs.hilt.compiler)
