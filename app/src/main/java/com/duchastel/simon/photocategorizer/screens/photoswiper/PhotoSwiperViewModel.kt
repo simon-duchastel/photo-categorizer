@@ -57,7 +57,7 @@ class PhotoSwiperViewModel @Inject constructor(
 
     fun processPhoto(photo: DisplayPhoto) {
         _state.update { oldState ->
-            oldState.copy(photoIndex = oldState.photos.indexOf(photo))
+            oldState.copy(photoIndex = oldState.photos.indexOf(photo) + 1)
         }
     }
 
@@ -66,9 +66,9 @@ class PhotoSwiperViewModel @Inject constructor(
         photoIndex: Int,
     ) = coroutineScope {
         photos
-            .drop(photoIndex)
-            .take(PHOTO_BUFFER_SIZE)
-            .filter { it.displayUrl == null }
+            .drop(photoIndex) // drop the current photo
+            .take(PHOTO_BUFFER_SIZE) // take the next photos for the buffer
+            .filter { it.displayUrl == null } // ignore already-loaded photos
             .map { photo ->
                 async {
                     val url = photoRepository.getUnauthenticatedLinkForPhoto(photo.path)
