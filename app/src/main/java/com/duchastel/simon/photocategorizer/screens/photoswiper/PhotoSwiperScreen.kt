@@ -1,12 +1,10 @@
 package com.duchastel.simon.photocategorizer.screens.photoswiper
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -44,8 +42,7 @@ private fun PhotoSwiperContent(
             onSwipeRight = { processPhoto(photo) },
         ) {
             AsyncImage(
-                // TODO - remove background color when done testing
-                modifier = Modifier.fillMaxSize().background(Color.Red),
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
                 model = photo.displayUrl,
                 contentDescription = photo.path,

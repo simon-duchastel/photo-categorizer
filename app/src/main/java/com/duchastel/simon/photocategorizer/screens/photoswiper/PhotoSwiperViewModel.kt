@@ -28,17 +28,6 @@ class PhotoSwiperViewModel @Inject constructor(
         viewModelScope.launch {
             val photos = photoRepository.getPhotos()
                 .map { DisplayPhoto(path = it.path, displayUrl = null) }
-//            // TODO - remove when done testing
-//            val photos = listOf(
-//                DisplayPhoto(path = "path1", displayUrl = "https://uc22e31aef6a36e181d57a6476bb.dl.dropboxusercontent.com/cd/0/get/Cj5qyoPud7yM0bkFLj_ahit0-XS8f3FD-57rCYLNCpd0yOiWdPRShRWW3jMsPY3ia5UU06upCTtbLOKJgFoJW2oMUnDAZlVw0z89b-WwFi0AKjXJYO9n_IeBlkrymrPFQL4lxcssPivwfmj7v12sFSpsFmNqIj3Lg4nSJL7MbQVTaA/file"),
-//                DisplayPhoto(path = "path2", displayUrl = "https://ucd9a1924bb018833562b691ca8c.dl.dropboxusercontent.com/cd/0/get/Cj7owZ5K5-eloVvbt9Ohh9bcB4F4PUbmXxu6xoU0oFvES6M4DI5Fq_Ll63QoxkWiFTEqQLyJRVDJReguiPEelUwxA7BPHh866KDaGcLi7OFEt0MBBrhgeAGy3_DhPFkoS5COJ1BmBQQRBOWnXaTjejpP8rvxTcgqkVfhX4BdZYQ54A/file"),
-//                DisplayPhoto(path = "path3", displayUrl = "https://uc22e31aef6a36e181d57a6476bb.dl.dropboxusercontent.com/cd/0/get/Cj5qyoPud7yM0bkFLj_ahit0-XS8f3FD-57rCYLNCpd0yOiWdPRShRWW3jMsPY3ia5UU06upCTtbLOKJgFoJW2oMUnDAZlVw0z89b-WwFi0AKjXJYO9n_IeBlkrymrPFQL4lxcssPivwfmj7v12sFSpsFmNqIj3Lg4nSJL7MbQVTaA/file"),
-//                DisplayPhoto(path = "path4", displayUrl = "https://ucd9a1924bb018833562b691ca8c.dl.dropboxusercontent.com/cd/0/get/Cj7owZ5K5-eloVvbt9Ohh9bcB4F4PUbmXxu6xoU0oFvES6M4DI5Fq_Ll63QoxkWiFTEqQLyJRVDJReguiPEelUwxA7BPHh866KDaGcLi7OFEt0MBBrhgeAGy3_DhPFkoS5COJ1BmBQQRBOWnXaTjejpP8rvxTcgqkVfhX4BdZYQ54A/file"),
-//                DisplayPhoto(path = "path5", displayUrl = "https://uc22e31aef6a36e181d57a6476bb.dl.dropboxusercontent.com/cd/0/get/Cj5qyoPud7yM0bkFLj_ahit0-XS8f3FD-57rCYLNCpd0yOiWdPRShRWW3jMsPY3ia5UU06upCTtbLOKJgFoJW2oMUnDAZlVw0z89b-WwFi0AKjXJYO9n_IeBlkrymrPFQL4lxcssPivwfmj7v12sFSpsFmNqIj3Lg4nSJL7MbQVTaA/file"),
-//                DisplayPhoto(path = "path6", displayUrl = "https://ucd9a1924bb018833562b691ca8c.dl.dropboxusercontent.com/cd/0/get/Cj7owZ5K5-eloVvbt9Ohh9bcB4F4PUbmXxu6xoU0oFvES6M4DI5Fq_Ll63QoxkWiFTEqQLyJRVDJReguiPEelUwxA7BPHh866KDaGcLi7OFEt0MBBrhgeAGy3_DhPFkoS5COJ1BmBQQRBOWnXaTjejpP8rvxTcgqkVfhX4BdZYQ54A/file"),
-//                DisplayPhoto(path = "path7", displayUrl = "https://uc22e31aef6a36e181d57a6476bb.dl.dropboxusercontent.com/cd/0/get/Cj5qyoPud7yM0bkFLj_ahit0-XS8f3FD-57rCYLNCpd0yOiWdPRShRWW3jMsPY3ia5UU06upCTtbLOKJgFoJW2oMUnDAZlVw0z89b-WwFi0AKjXJYO9n_IeBlkrymrPFQL4lxcssPivwfmj7v12sFSpsFmNqIj3Lg4nSJL7MbQVTaA/file"),
-//                DisplayPhoto(path = "path8", displayUrl = "https://ucd9a1924bb018833562b691ca8c.dl.dropboxusercontent.com/cd/0/get/Cj7owZ5K5-eloVvbt9Ohh9bcB4F4PUbmXxu6xoU0oFvES6M4DI5Fq_Ll63QoxkWiFTEqQLyJRVDJReguiPEelUwxA7BPHh866KDaGcLi7OFEt0MBBrhgeAGy3_DhPFkoS5COJ1BmBQQRBOWnXaTjejpP8rvxTcgqkVfhX4BdZYQ54A/file"),
-//            )
             _state.update { it.copy(photos = photos) }
         }
 
