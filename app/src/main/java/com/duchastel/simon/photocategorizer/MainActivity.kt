@@ -53,28 +53,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PhotoCategorizerTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    bottomBar = {
-                        NavigationBar {
-                            NavigationBarItem(
-                                icon = {
-                                    Icon(
-                                        Icons.Filled.Settings,
-                                        contentDescription = "Settings"
-                                    )
-                                },
-                                label = { Text("Settings") },
-                                selected = false,
-                                onClick = { }
-                            )
-                        }
-                    }
-                ) { innerPadding ->
-                    Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                        AppNavigation()
-                    }
-                }
+                AppNavigation()
             }
         }
     }

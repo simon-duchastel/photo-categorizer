@@ -1,51 +1,38 @@
 package com.duchastel.simon.photocategorizer.screens.photoswiper
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEvent
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.IntOffset
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperViewModel.DisplayPhoto
 import com.duchastel.simon.photocategorizer.ui.components.SwipeCard
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 @Composable
 fun PhotoSwiperScreen(
     viewModel: PhotoSwiperViewModel = hiltViewModel(),
-    logout: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
 
     PhotoSwiperContent(
         photos = state.photos.filter { it.displayUrl != null },
         processPhoto = viewModel::processPhoto,
-        onLogoutClicked = logout,
     )
 }
 
@@ -54,14 +41,11 @@ fun PhotoSwiperScreen(
 private fun PhotoSwiperContent(
     photos: List<DisplayPhoto>,
     processPhoto: (DisplayPhoto) -> Unit,
-    onLogoutClicked: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Button(onClick = onLogoutClicked) { Text("Logout") }
-
         if (photos.isEmpty()) return
         val pagerState = rememberPagerState(pageCount = { photos.size })
         val coroutineScale = rememberCoroutineScope()
