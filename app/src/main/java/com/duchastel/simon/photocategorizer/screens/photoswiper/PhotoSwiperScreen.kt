@@ -1,13 +1,13 @@
 package com.duchastel.simon.photocategorizer.screens.photoswiper
 
-import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperViewModel.DisplayPhoto
@@ -32,27 +32,20 @@ private fun PhotoSwiperContent(
     processPhoto: (DisplayPhoto) -> Unit,
 ) {
     if (photos.isEmpty()) return
-    val context = LocalContext.current
     OneWayVerticalSwiper(
         modifier = Modifier.fillMaxSize(),
         items = photos,
         onSwipe = { photo ->
-            Toast.makeText(context, "Swipe Up", Toast.LENGTH_SHORT).show()
             processPhoto(photo)
         },
     ) { photo ->
         HorizontalSwiper(
-            onSwipeLeft = {
-                Toast.makeText(context, "Swipe left", Toast.LENGTH_SHORT).show()
-                processPhoto(photo)
-            },
-            onSwipeRight = {
-                Toast.makeText(context, "Swipe Right", Toast.LENGTH_SHORT).show()
-                processPhoto(photo)
-            },
+            onSwipeLeft = { processPhoto(photo) },
+            onSwipeRight = { processPhoto(photo) },
         ) {
             AsyncImage(
-                modifier = Modifier.fillMaxSize(),
+                // TODO - remove background color when done testing
+                modifier = Modifier.fillMaxSize().background(Color.Red),
                 contentScale = ContentScale.Crop,
                 model = photo.displayUrl,
                 contentDescription = photo.path,

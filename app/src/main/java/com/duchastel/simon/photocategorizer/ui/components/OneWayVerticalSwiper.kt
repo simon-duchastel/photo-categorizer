@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,26 +42,29 @@ fun <T> OneWayVerticalSwiper(
     var offsetY by remember { mutableFloatStateOf(0f) }
     var isAnimating by remember { mutableStateOf(false) }
 
-    val animatedOffset by animateFloatAsState(
-        targetValue = if (isAnimating) {
-            containerHeight * -1.25f // make sure we go past the top of the container
-        } else {
-            offsetY.coerceIn(-threshold..0f) // don't scroll past the threshold
-        },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
-        finishedListener = {
-            if (isAnimating) {
-                // Reset position and update indices after animation completes
-                offsetY = 0f
-                isAnimating = false
-                currentIndex++
-            }
-        },
-        label = "OneWayVerticalSwiperOffset"
-    )
+    // using key(currentIndex) forces the animation to reset every time the index changes
+    val animatedOffset by key(currentIndex) {
+        animateFloatAsState(
+            targetValue = if (isAnimating) {
+                containerHeight * -1.20f // add 20% make sure we go past the top of the container
+            } else {
+                offsetY.coerceIn(-threshold..0f) // don't scroll past the threshold
+            },
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessMedium,
+            ),
+            finishedListener = {
+                if (isAnimating) {
+                    // Reset position and update indices after animation completes
+                    offsetY = 0f
+                    isAnimating = false
+                    currentIndex++
+                }
+            },
+            label = "OneWayVerticalSwiperOffset"
+        )
+    }
 
     Box(
         modifier = modifier
