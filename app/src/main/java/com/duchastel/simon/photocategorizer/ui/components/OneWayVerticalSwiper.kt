@@ -3,6 +3,7 @@ package com.duchastel.simon.photocategorizer.ui.components
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
@@ -28,6 +30,7 @@ import kotlin.math.roundToInt
 fun OneWayVerticalSwiper(
     modifier: Modifier = Modifier,
     onSwipe: (Int) -> Unit,
+    swipeUpBackground:  @Composable () -> Unit,
     content: @Composable (Int) -> Unit,
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
@@ -101,9 +104,13 @@ fun OneWayVerticalSwiper(
                 )
             }
     ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            swipeUpBackground()
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .alpha(1f)
                 .offset {
                     IntOffset(
                         x = 0,

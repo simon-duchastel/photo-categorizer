@@ -1,17 +1,24 @@
 package com.duchastel.simon.photocategorizer.screens.photoswiper
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.SubcomposeAsyncImage
 import coil3.imageLoader
@@ -69,6 +76,24 @@ private fun PhotoSwiperContent(
         onSwipe = { index ->
             processPhoto(index)
         },
+        swipeUpBackground = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.DarkGray),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(modifier = Modifier.weight(3f))
+                Text(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(32.dp),
+                    text = "Ignore",
+                    color = Color.White,
+                    fontSize = 32.sp,
+                )
+            }
+        }
     ) { index ->
         val photo = photos[index]
         HorizontalSwiper(
@@ -86,7 +111,7 @@ private fun PhotoSwiperContent(
             )
         }
 
-        // pre-render next image to avoid jitter
+        // pre-render next image invisibly to avoid jitter
         if (index < photos.lastIndex) {
             Box(modifier = Modifier.alpha(0f)) {
                 SubcomposeAsyncImage(
