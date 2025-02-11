@@ -1,8 +1,8 @@
 package com.duchastel.simon.photocategorizer.dropbox.di
 
-import com.duchastel.simon.photocategorizer.dropbox.files.DropboxFileManager
+import com.duchastel.simon.photocategorizer.dropbox.files.DropboxPhotoRepository
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
-import com.duchastel.simon.photocategorizer.filemanager.FileManager
+import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,7 +18,7 @@ object FileManagerModule {
     @Singleton
     fun provideDropboxFileManager(
         networkApi: DropboxFileApi,
-    ): FileManager {
-        return DropboxFileManager(networkApi)
+    ): PhotoRepository {
+        return DropboxPhotoRepository(networkApi)
     }
 }

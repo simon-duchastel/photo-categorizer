@@ -10,10 +10,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.duchastel.simon.photocategorizer.navigation.NavDestination.Login
 import com.duchastel.simon.photocategorizer.navigation.NavDestination.PhotoSwiper
+import com.duchastel.simon.photocategorizer.navigation.NavDestination.Settings
 import com.duchastel.simon.photocategorizer.navigation.NavDestination.Splash
 import com.duchastel.simon.photocategorizer.screens.login.LoginScreen
 import com.duchastel.simon.photocategorizer.screens.login.LoginViewModel
 import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperScreen
+import com.duchastel.simon.photocategorizer.screens.settings.SettingsScreen
 import com.duchastel.simon.photocategorizer.screens.splash.SplashScreen
 import kotlinx.serialization.Serializable
 
@@ -33,18 +35,30 @@ fun AppNavigation(viewModel: LoginViewModel = hiltViewModel()) {
 
     NavHost(navController = navController, startDestination = Splash) {
         composable<Splash> {
-            SplashScreen()
+            SignedOutWrapper {
+                SplashScreen()
+            }
         }
         composable<Login> {
-            LoginScreen()
+            SignedOutWrapper {
+                LoginScreen()
+            }
         }
         composable<PhotoSwiper> {
-            PhotoSwiperScreen(
-                logout = {
-                    viewModel.logout()
-                    navController.navigate(Login)
-                }
-            )
+            SignedInWrapper(
+                settingsSelected = true,
+                onSettingsClicked = { navController.navigate(Settings) },
+            ) {
+                PhotoSwiperScreen()
+            }
+        }
+        composable<Settings> {
+            SignedInWrapper(
+                settingsSelected = false,
+                onSettingsClicked = { navController.popBackStack() },
+            ) {
+                SettingsScreen()
+            }
         }
     }
 }
@@ -58,4 +72,7 @@ object NavDestination {
 
     @Serializable
     object PhotoSwiper
+
+    @Serializable
+    object Settings
 }

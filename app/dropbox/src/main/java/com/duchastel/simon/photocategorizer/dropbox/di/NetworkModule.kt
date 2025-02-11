@@ -1,6 +1,6 @@
 package com.duchastel.simon.photocategorizer.dropbox.di
 
-import com.duchastel.simon.photocategorizer.auth.AuthManager
+import com.duchastel.simon.photocategorizer.auth.AuthRepository
 import com.duchastel.simon.photocategorizer.auth.AccessTokenAuthInterceptor
 import com.duchastel.simon.photocategorizer.auth.LoggedOutInterceptor
 import com.duchastel.simon.photocategorizer.dropbox.network.DROPBOX_API_BASE_URL
@@ -25,18 +25,18 @@ object NetworkModule {
     @Dropbox
     @Singleton
     fun provideAuthInterceptor(
-        @Dropbox authManager: AuthManager
+        @Dropbox authRepository: AuthRepository
     ): AccessTokenAuthInterceptor {
-        return AccessTokenAuthInterceptor(authManager)
+        return AccessTokenAuthInterceptor(authRepository)
     }
 
     @Provides
     @Dropbox
     @Singleton
     fun provideLoggedOutInterceptor(
-        @Dropbox authManager: AuthManager
+        @Dropbox authRepository: AuthRepository
     ): LoggedOutInterceptor {
-        return LoggedOutInterceptor(authManager)
+        return LoggedOutInterceptor(authRepository)
     }
 
     @Provides

@@ -5,7 +5,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import kotlinx.coroutines.flow.Flow
 
-interface AuthManager {
+interface AuthRepository {
     /**
      * Returns true if the user is currently logged in, false otherwise.
      */

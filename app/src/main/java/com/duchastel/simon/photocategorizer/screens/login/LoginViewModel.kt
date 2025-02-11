@@ -3,7 +3,7 @@ package com.duchastel.simon.photocategorizer.screens.login
 import android.app.PendingIntent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.duchastel.simon.photocategorizer.auth.AuthManager
+import com.duchastel.simon.photocategorizer.auth.AuthRepository
 import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,15 +15,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    @Dropbox private val authManager: AuthManager,
+    @Dropbox private val authRepository: AuthRepository,
 ): ViewModel() {
     private val _state: MutableStateFlow<State> = MutableStateFlow(State())
     val state: StateFlow<State> = _state
 
     init {
-        _state.update { oldState -> oldState.copy(isLoggedIn = authManager.isLoggedIn()) }
+        _state.update { oldState -> oldState.copy(isLoggedIn = authRepository.isLoggedIn()) }
         viewModelScope.launch {
-            authManager
+            authRepository
                 .isLoggedInFlow()
                 .distinctUntilChanged()
                 .collect { isLoggedIn ->
@@ -35,13 +35,13 @@ class LoginViewModel @Inject constructor(
     fun login(redirectIntent: PendingIntent) {
         viewModelScope.launch {
             _state.update { oldState -> oldState.copy(loginInProgress = true) }
-            authManager.login(redirectIntent)
+            authRepository.login(redirectIntent)
             _state.update { oldState -> oldState.copy(loginInProgress = false) }
         }
     }
 
     fun logout() {
-        authManager.logout()
+        authRepository.logout()
     }
 
     data class State(

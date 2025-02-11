@@ -1,6 +1,6 @@
 package com.duchastel.simon.photocategorizer.filemanager
 
-interface FileManager {
+interface PhotoRepository {
     suspend fun getPhotos(): List<Photo>
     suspend fun getUnauthenticatedLinkForPhoto(path: String): String
 }
