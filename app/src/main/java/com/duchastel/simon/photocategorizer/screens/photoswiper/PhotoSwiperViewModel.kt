@@ -26,8 +26,10 @@ class PhotoSwiperViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val photos = photoRepository.getPhotos()
-                .map { DisplayPhoto(path = it.path, displayUrl = null) }
+//            val photos = photoRepository.getPhotos()
+//                .map { DisplayPhoto(path = it.path, displayUrl = null) }
+            // TODO - remove when done testing
+            val photos = listOf(DisplayPhoto(path = "path", displayUrl = "https://uc22e31aef6a36e181d57a6476bb.dl.dropboxusercontent.com/cd/0/get/Cj5qyoPud7yM0bkFLj_ahit0-XS8f3FD-57rCYLNCpd0yOiWdPRShRWW3jMsPY3ia5UU06upCTtbLOKJgFoJW2oMUnDAZlVw0z89b-WwFi0AKjXJYO9n_IeBlkrymrPFQL4lxcssPivwfmj7v12sFSpsFmNqIj3Lg4nSJL7MbQVTaA/file"))
             _state.update { it.copy(photos = photos) }
         }
 
@@ -87,6 +89,6 @@ class PhotoSwiperViewModel @Inject constructor(
     )
 
     companion object {
-        const val PHOTO_BUFFER_SIZE = 10
+        const val PHOTO_BUFFER_SIZE = 3
     }
 }
