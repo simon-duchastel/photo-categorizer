@@ -1,11 +1,13 @@
 package com.duchastel.simon.photocategorizer.screens.photoswiper
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.SubcomposeAsyncImage
 import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperViewModel.DisplayPhoto
@@ -19,21 +21,6 @@ fun PhotoSwiperScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    PhotoSwiperContent(
-        photos = state.photos.filter { it.displayUrl != null },
-        processPhoto = viewModel::processPhoto,
-    )
-}
-
-@Composable
-private fun PhotoSwiperContent(
-    photos: List<DisplayPhoto>,
-    processPhoto: (DisplayPhoto) -> Unit,
-) {
-    if (photos.isEmpty()) {
-        SkeletonLoader()
-        return
-    }
 //    val context = LocalContext.current
 //    LaunchedEffect(photos) {
 //        // preload the first few photos in the buffer initially
@@ -53,6 +40,21 @@ private fun PhotoSwiperContent(
 //        }
 //    }
 
+    PhotoSwiperContent(
+        photos = state.photos.filter { it.displayUrl != null },
+        processPhoto = viewModel::processPhoto,
+    )
+}
+
+@Composable
+private fun PhotoSwiperContent(
+    photos: List<DisplayPhoto>,
+    processPhoto: (DisplayPhoto) -> Unit,
+) {
+    if (photos.isEmpty()) {
+        SkeletonLoader(modifier = Modifier.padding(16.dp))
+        return
+    }
 
     OneWayVerticalSwiper(
         modifier = Modifier.fillMaxSize(),
@@ -71,7 +73,7 @@ private fun PhotoSwiperContent(
                 contentScale = ContentScale.Crop,
                 contentDescription = photo.path,
                 loading = {
-                    SkeletonLoader()
+                    SkeletonLoader(modifier = Modifier.padding(16.dp))
                 },
             )
         }

@@ -20,12 +20,11 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlin.random.Random
 
 @Composable
 fun SkeletonLoader(
     modifier: Modifier = Modifier,
-    blockSpacing: Dp = 24.dp,
+    blockSpacing: Dp = 32.dp,
     groupSpacing: Dp = 12.dp,
     barHeight: Dp = 16.dp,
     blockHeight: Dp = 120.dp,
@@ -34,7 +33,6 @@ fun SkeletonLoader(
     val density = LocalDensity.current
     var containerHeight by remember { mutableIntStateOf(0) }
 
-    // Calculate number of block groups that can fit
     val numberOfGroups by with(density) {
         remember(containerHeight, blockSpacing, blockHeight, bottomSpacing) {
             derivedStateOf {
@@ -51,12 +49,13 @@ fun SkeletonLoader(
             .onSizeChanged { containerHeight = it.height },
         verticalArrangement = Arrangement.spacedBy(blockSpacing)
     ) {
-        repeat(numberOfGroups) {
+        repeat(numberOfGroups) { groupIndex ->
             SkeletonGroup(
                 modifier = Modifier.fillMaxWidth(),
                 blockHeight = blockHeight,
                 barHeight = barHeight,
-                groupSpacing = groupSpacing
+                groupSpacing = groupSpacing,
+                shimmerDelayMillis = groupIndex * 200 // Add delay between groups
             )
         }
     }
@@ -71,19 +70,20 @@ private fun SkeletonGroup(
     shimmerDelayMillis: Int = 0,
 ) {
     var containerWidth by remember { mutableIntStateOf(0) }
+
     Column(
+        modifier = modifier.onSizeChanged { containerWidth = it.width },
         verticalArrangement = Arrangement.spacedBy(groupSpacing)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .onSizeChanged { containerWidth = it.width }
                 .height(blockHeight)
                 .clip(RoundedCornerShape(8.dp))
                 .background(
                     shimmerBrush(
                         delayMillis = shimmerDelayMillis,
-                        width = containerWidth.toFloat(),
+                        width = containerWidth.toFloat()
                     )
                 )
         )
@@ -91,42 +91,21 @@ private fun SkeletonGroup(
         Column(
             verticalArrangement = Arrangement.spacedBy(groupSpacing)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.95f)
-                    .height(barHeight)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(
-                        shimmerBrush(
-                            delayMillis = shimmerDelayMillis + 150, // offset 1st box by 150ms
-                            width = containerWidth.toFloat(),
+            val widthPercentages = listOf(0.95f, 0.8f, 0.6f)
+            widthPercentages.forEachIndexed { index, width ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(width)
+                        .height(barHeight)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(
+                            shimmerBrush(
+                                delayMillis = shimmerDelayMillis + (index + 1) * 150,
+                                width = containerWidth.toFloat(),
+                            )
                         )
-                    )
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(barHeight)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(
-                        shimmerBrush(
-                            delayMillis = shimmerDelayMillis + 300, // offset 2nd box by 300ms
-                            width = containerWidth.toFloat(),
-                        )
-                    )
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.6f)
-                    .height(barHeight)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(
-                        shimmerBrush(
-                            delayMillis = shimmerDelayMillis + 450, // offset 2nd box by 450ms
-                            width = containerWidth.toFloat(),
-                        )
-                    )
-            )
+                )
+            }
         }
     }
 }

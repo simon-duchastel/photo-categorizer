@@ -14,9 +14,9 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun shimmerBrush(
-    width: Float = 2000f,
+    width: Float = 3000f,
     delayMillis: Int = 0,
-    durationMillis: Int = 1000,
+    durationMillis: Int = 1500,
 ): Brush {
     val colors = listOf(
         Color.LightGray.copy(alpha = 0.6f),
@@ -26,8 +26,8 @@ fun shimmerBrush(
 
     val transition = rememberInfiniteTransition(label = "Shimmer")
     val translateAnimation by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = width,
+        initialValue = -width,
+        targetValue = 2 * width,
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = durationMillis,
@@ -41,7 +41,7 @@ fun shimmerBrush(
 
     return Brush.linearGradient(
         colors = colors,
-        start = Offset(x = translateAnimation - width, y = 0.0f),
-        end = Offset(x = translateAnimation, y = 0.0f),
+        start = Offset(x = translateAnimation - width, y = 0f),
+        end = Offset(x = translateAnimation, y = 0f),
     )
 }
