@@ -33,22 +33,6 @@ private fun PhotoSwiperContent(
 ) {
     if (photos.isEmpty()) return
     val context = LocalContext.current
-//    HorizontalSwiper(
-//        onSwipeLeft = {
-//            Toast.makeText(context, "Swipe left", Toast.LENGTH_SHORT).show()
-//        },
-//        onSwipeRight = {
-//            Toast.makeText(context, "Swipe Right", Toast.LENGTH_SHORT).show()
-//        },
-//    ) {
-//        AsyncImage(
-//            modifier = Modifier.fillMaxSize(),
-//            contentScale = ContentScale.Crop,
-//            model = photos[0].displayUrl,
-//            contentDescription = photos[0].path,
-//        )
-//    }
-
     OneWayVerticalSwiper(
         modifier = Modifier.fillMaxSize(),
         items = photos,
@@ -72,31 +56,4 @@ private fun PhotoSwiperContent(
             )
         }
     }
-
-//    val coroutineScope = rememberCoroutineScope()
-//    OneWayVerticalSwiper(
-//        modifier = Modifier.fillMaxSize(),
-//        items = photos,
-//        onSwipe = processPhoto,
-//    ) { photo, pagerState ->
-//        HorizontalSwiper(
-//            onSwipeRight = {
-//                coroutineScope.launch {
-//                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
-//                }
-//            },
-//            onSwipeLeft = {
-//                coroutineScope.launch {
-//                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
-//                }
-//            }
-//        ) {
-//            AsyncImage(
-//                modifier = Modifier.fillMaxSize(),
-//                contentScale = ContentScale.Crop,
-//                model = photo.displayUrl,
-//                contentDescription = photo.path,
-//            )
-//        }
-//    }
 }

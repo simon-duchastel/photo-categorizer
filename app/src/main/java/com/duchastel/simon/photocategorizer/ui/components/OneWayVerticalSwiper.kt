@@ -8,16 +8,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
@@ -29,47 +30,60 @@ fun <T> OneWayVerticalSwiper(
 ) {
     if (items.isEmpty()) return
 
-    val threshold = 1000f
+    var containerHeight by remember { mutableIntStateOf(0) }
+    val threshold by remember(containerHeight) { derivedStateOf { containerHeight / 2.5f } }
+
+    var currentIndex by remember { mutableIntStateOf(0) }
     var offsetY by remember { mutableFloatStateOf(0f) }
-    var showNewContent by remember { mutableStateOf(false) }
+    var isAnimating by remember { mutableStateOf(false) }
+
     val animatedOffset by animateFloatAsState(
-        targetValue = if (showNewContent) -threshold else offsetY,
+        targetValue = if (isAnimating) {
+            containerHeight * -1.25f // make sure we go past the top of the container
+        } else {
+            offsetY.coerceIn(-threshold..0f)
+        },
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessMedium,
         ),
+        finishedListener = {
+            if (isAnimating) {
+                // Reset position and update indices after animation completes
+                offsetY = 0f
+                isAnimating = false
+                currentIndex++
+            }
+        },
         label = "OneWayVerticalSwiperOffset"
     )
 
     Box(
         modifier = modifier
             .fillMaxSize()
+            .onSizeChanged { containerHeight = it.height }
             .pointerInput(Unit) {
-                coroutineScope {
-                    launch {
-                        detectVerticalDragGestures(
-                            onDragEnd = {
-                                if (offsetY < -threshold) {
-                                    showNewContent = true
-                                    onSwipe(items.first())
-                                } else {
-                                    // Reset position
-                                    offsetY = 0f
-                                    showNewContent = false
-                                }
-                            },
-                            onVerticalDrag = { change, dragAmount ->
-                                change.consume()
-                                // Only allow upward scrolling (negative dragAmount)
-                                if (dragAmount < 0 || offsetY < 0) {
-                                    offsetY = (offsetY + dragAmount).coerceAtMost(0f)
-                                }
-                            }
-                        )
+                detectVerticalDragGestures(
+                    onDragEnd = {
+                        if (offsetY < -threshold) {
+                            isAnimating = true
+                            onSwipe(items[currentIndex])
+                        } else {
+                            // Reset position without changing indices
+                            offsetY = 0f
+                        }
+                    },
+                    onVerticalDrag = { change, dragAmount ->
+                        change.consume()
+                        // Update scrolling and disallow downward scrolling when not dragging
+                        if (!isAnimating && (dragAmount < 0 || offsetY < 0)) {
+                            offsetY += dragAmount
+                        }
                     }
-                }
+                )
             }
     ) {
+        // Current content
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -80,22 +94,7 @@ fun <T> OneWayVerticalSwiper(
                     )
                 }
         ) {
-            content(items.first())
-        }
-
-        if (showNewContent) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .offset {
-                        IntOffset(
-                            x = 0,
-                            y = (animatedOffset + threshold).roundToInt()
-                        )
-                    }
-            ) {
-                content(items.first())
-            }
+            content(items[currentIndex])
         }
     }
 }
