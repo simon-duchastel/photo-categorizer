@@ -25,17 +25,12 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 @Composable
-fun <T> OneWayVerticalSwiper(
+fun OneWayVerticalSwiper(
     modifier: Modifier = Modifier,
-    items: List<T>,
-    onSwipe: (T) -> Unit,
-    content: @Composable (T) -> Unit,
+    onSwipe: (Int) -> Unit,
+    content: @Composable (Int) -> Unit,
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
-    val currentIndexSafe by remember(currentIndex) {
-        derivedStateOf { currentIndex.coerceAtMost(items.lastIndex) }
-    }
-    if (currentIndex > items.lastIndex) return // don't render with no elements left
 
     var containerHeight by remember { mutableIntStateOf(0) }
     val threshold by remember(containerHeight) { derivedStateOf { containerHeight / 2.5f } }
@@ -90,7 +85,7 @@ fun <T> OneWayVerticalSwiper(
                     onDragEnd = {
                         if (offsetY < -threshold) {
                             containerFlyingOffScreen = true
-                            onSwipe(items[currentIndexSafe])
+                            onSwipe(currentIndex)
                         } else {
                             // Reset position without changing indices
                             offsetY = 0f
@@ -116,7 +111,7 @@ fun <T> OneWayVerticalSwiper(
                     )
                 }
         ) {
-            content(items[currentIndexSafe])
+            content(currentIndex)
         }
     }
 }
