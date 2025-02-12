@@ -3,6 +3,7 @@ package com.duchastel.simon.photocategorizer.screens.photoswiper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -97,6 +98,20 @@ private fun PhotoSwiperContent(
     ) { index ->
         val photo = photos[index]
         HorizontalSwiper(
+            swipeLeftBackground = {
+                HorizontalSwipeBackground(
+                    text = "New Category",
+                    color = Color.Red,
+                    direction = SwipeDirection.Left,
+                )
+            },
+            swipeRightBackground = {
+                HorizontalSwipeBackground(
+                    text = "Categorize",
+                    color = Color.Green,
+                    direction = SwipeDirection.Right,
+                )
+            },
             onSwipeLeft = { processPhoto(index) },
             onSwipeRight = { processPhoto(index) },
         ) {
@@ -124,6 +139,42 @@ private fun PhotoSwiperContent(
                     },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun HorizontalSwipeBackground(
+    text: String,
+    color: Color,
+    direction: SwipeDirection,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (direction == SwipeDirection.Left) {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(2f),
+        ) {
+            Text(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(32.dp),
+                text = text,
+                color = Color.White,
+                fontSize = 32.sp,
+            )
+            Spacer(modifier = Modifier.weight(3f))
+        }
+        if (direction == SwipeDirection.Right) {
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }

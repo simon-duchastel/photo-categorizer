@@ -3,7 +3,6 @@ package com.duchastel.simon.photocategorizer.ui.components
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +23,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.delay
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 @Composable
@@ -78,6 +78,10 @@ fun OneWayVerticalSwiper(
             label = "OneWayVerticalSwiperOffset"
         )
     }
+    val percentSwiped = animatedOffset
+        .coerceIn(-threshold..0f)
+        .absoluteValue
+        .let { (1 - (threshold - it) / threshold).absoluteValue }
 
     Box(
         modifier = modifier
@@ -104,7 +108,11 @@ fun OneWayVerticalSwiper(
                 )
             }
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(percentSwiped),
+        ) {
             swipeUpBackground()
         }
         Box(
