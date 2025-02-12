@@ -29,12 +29,11 @@ import kotlin.math.roundToInt
 @Composable
 fun OneWayVerticalSwiper(
     modifier: Modifier = Modifier,
+    swiperState: VerticalSwiperState,
     onSwipe: (Int) -> Unit,
     swipeUpBackground:  @Composable () -> Unit,
     content: @Composable (Int) -> Unit,
 ) {
-    var currentIndex by remember { mutableIntStateOf(0) }
-
     var containerHeight by remember { mutableIntStateOf(0) }
     val threshold by remember(containerHeight) { derivedStateOf { containerHeight / 2.5f } }
 
@@ -49,7 +48,7 @@ fun OneWayVerticalSwiper(
     }
 
     // key(currentIndex) forces the animation to reset every time the index changes
-    val animatedOffset by key(currentIndex) {
+    val animatedOffset by key(swiperState.currentPage) {
         animateFloatAsState(
             targetValue = if (containerFlyingOffScreen) {
                 containerHeight * -1.10f // add 10% make sure we go past the top of the container
@@ -69,7 +68,7 @@ fun OneWayVerticalSwiper(
                     containerFlyingOffScreen = false
                     newContainerAnimatingIn = true
                     offsetY = containerHeight.toFloat()
-                    currentIndex++
+                    onSwipe(swiperState.currentPage)
                 } else if (newContainerAnimatingIn) {
                     // Update state once animation is done
                     newContainerAnimatingIn = false
@@ -92,7 +91,6 @@ fun OneWayVerticalSwiper(
                     onDragEnd = {
                         if (offsetY < -threshold) {
                             containerFlyingOffScreen = true
-                            onSwipe(currentIndex)
                         } else {
                             // Reset position without changing indices
                             offsetY = 0f
@@ -126,7 +124,34 @@ fun OneWayVerticalSwiper(
                     )
                 }
         ) {
-            content(currentIndex)
+            content(swiperState.currentPage)
         }
+    }
+}
+
+interface VerticalSwiperState {
+    val pageCount: Int
+    val currentPage: Int
+
+    fun swipeToNextPage()
+}
+
+@Composable
+fun rememberVerticalSwiperState(pageCount: () -> Int): VerticalSwiperState = remember {
+    DefaultVerticalSwiperState(pageCount = pageCount)
+}
+
+private class DefaultVerticalSwiperState(
+    pageCount: () -> Int
+): VerticalSwiperState {
+    override var currentPage by mutableIntStateOf(0)
+        private set
+
+    var pageCountState = mutableStateOf(pageCount)
+    override val pageCount: Int
+        get() = pageCountState.value.invoke()
+
+    override fun swipeToNextPage() {
+        currentPage++
     }
 }

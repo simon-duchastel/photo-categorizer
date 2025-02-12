@@ -19,8 +19,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import com.duchastel.simon.photocategorizer.screens.photoswiper.SwipeDirection
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
@@ -63,25 +61,21 @@ fun HorizontalSwiper(
         modifier = modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                coroutineScope {
-                    launch {
-                        detectHorizontalDragGestures(
-                            onDragEnd = {
-                                // reset offset when user stops scrolling
-                                if (offsetX > swipeThreshold) {
-                                    onSwipeRight()
-                                } else if (offsetX < -swipeThreshold) {
-                                    onSwipeLeft()
-                                }
-                                offsetX = 0f
-                            },
-                            onHorizontalDrag = { _, dragAmount ->
-                                // update offset as the user scrolls
-                                offsetX += dragAmount
-                            }
-                        )
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        // reset offset when user stops scrolling
+                        if (offsetX > swipeThreshold) {
+                            onSwipeRight()
+                        } else if (offsetX < -swipeThreshold) {
+                            onSwipeLeft()
+                        }
+                        offsetX = 0f
+                    },
+                    onHorizontalDrag = { _, dragAmount ->
+                        // update offset as the user scrolls
+                        offsetX += dragAmount
                     }
-                }
+                )
             }
     ) {
         Box(
