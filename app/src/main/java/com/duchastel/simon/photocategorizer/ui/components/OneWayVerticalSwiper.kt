@@ -18,16 +18,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.delay
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 @Composable
 fun OneWayVerticalSwiper(
     modifier: Modifier = Modifier,
     onSwipe: (Int) -> Unit,
+    swipeUpBackground:  @Composable () -> Unit,
     content: @Composable (Int) -> Unit,
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
@@ -75,6 +78,10 @@ fun OneWayVerticalSwiper(
             label = "OneWayVerticalSwiperOffset"
         )
     }
+    val percentSwiped = animatedOffset
+        .coerceIn(-threshold..0f)
+        .absoluteValue
+        .let { (1 - (threshold - it) / threshold).absoluteValue }
 
     Box(
         modifier = modifier
@@ -104,6 +111,14 @@ fun OneWayVerticalSwiper(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .alpha(percentSwiped),
+        ) {
+            swipeUpBackground()
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(1f)
                 .offset {
                     IntOffset(
                         x = 0,
