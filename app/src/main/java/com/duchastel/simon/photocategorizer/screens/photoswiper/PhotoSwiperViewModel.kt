@@ -44,7 +44,7 @@ class PhotoSwiperViewModel @Inject constructor(
         }
     }
 
-    fun processPhoto(index: Int) {
+    fun processPhoto(index: Int, direction: SwipeDirection) {
         _state.update { oldState ->
             oldState.copy(photoIndex = index + 1)
         }

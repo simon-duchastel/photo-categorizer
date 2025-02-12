@@ -66,7 +66,7 @@ fun PhotoSwiperScreen(
 @Composable
 private fun PhotoSwiperContent(
     photos: List<DisplayPhoto>,
-    processPhoto: (Int) -> Unit,
+    processPhoto: (Int, SwipeDirection) -> Unit,
 ) {
     if (photos.isEmpty()) {
         SkeletonLoader(modifier = Modifier.padding(16.dp))
@@ -78,7 +78,7 @@ private fun PhotoSwiperContent(
         modifier = Modifier.fillMaxSize(),
         swiperState = swiperState,
         onSwipe = { index ->
-            processPhoto(index)
+            processPhoto(index, SwipeDirection.Up)
             swiperState.swipeToNextPage()
         },
         swipeUpBackground = {
@@ -106,22 +106,22 @@ private fun PhotoSwiperContent(
                 HorizontalSwipeBackground(
                     text = "New Category",
                     color = Color.Red,
-                    direction = SwipeDirection.Left,
+                    direction = HorizontalSwipeDirection.Left,
                 )
             },
             swipeRightBackground = {
                 HorizontalSwipeBackground(
                     text = "Categorize",
                     color = Color.Green,
-                    direction = SwipeDirection.Right,
+                    direction = HorizontalSwipeDirection.Right,
                 )
             },
             onSwipeLeft = {
-                processPhoto(swiperState.currentPage)
+                processPhoto(swiperState.currentPage, SwipeDirection.Left)
                 swiperState.swipeToNextPage()
             },
             onSwipeRight = {
-                processPhoto(swiperState.currentPage)
+                processPhoto(swiperState.currentPage, SwipeDirection.Right)
                 swiperState.swipeToNextPage()
             },
         ) {
@@ -157,7 +157,7 @@ private fun PhotoSwiperContent(
 private fun HorizontalSwipeBackground(
     text: String,
     color: Color,
-    direction: SwipeDirection,
+    direction: HorizontalSwipeDirection,
 ) {
     Row(
         modifier = Modifier
@@ -165,7 +165,7 @@ private fun HorizontalSwipeBackground(
             .background(color),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (direction == SwipeDirection.Left) {
+        if (direction == HorizontalSwipeDirection.Left) {
             Spacer(modifier = Modifier.weight(1f))
         }
         Column(
@@ -183,7 +183,7 @@ private fun HorizontalSwipeBackground(
             )
             Spacer(modifier = Modifier.weight(3f))
         }
-        if (direction == SwipeDirection.Right) {
+        if (direction == HorizontalSwipeDirection.Right) {
             Spacer(modifier = Modifier.weight(1f))
         }
     }
