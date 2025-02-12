@@ -30,6 +30,7 @@ import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperViewM
 import com.duchastel.simon.photocategorizer.ui.components.HorizontalSwiper
 import com.duchastel.simon.photocategorizer.ui.components.OneWayVerticalSwiper
 import com.duchastel.simon.photocategorizer.ui.components.SkeletonLoader
+import com.duchastel.simon.photocategorizer.ui.components.rememberVerticalSwiperState
 
 @Composable
 fun PhotoSwiperScreen(
@@ -72,10 +73,13 @@ private fun PhotoSwiperContent(
         return
     }
 
+    val swiperState = rememberVerticalSwiperState { photos.size }
     OneWayVerticalSwiper(
         modifier = Modifier.fillMaxSize(),
+        swiperState = swiperState,
         onSwipe = { index ->
             processPhoto(index)
+            swiperState.swipeToNextPage()
         },
         swipeUpBackground = {
             Column(
@@ -112,8 +116,14 @@ private fun PhotoSwiperContent(
                     direction = SwipeDirection.Right,
                 )
             },
-            onSwipeLeft = { processPhoto(index) },
-            onSwipeRight = { processPhoto(index) },
+            onSwipeLeft = {
+                processPhoto(swiperState.currentPage)
+                swiperState.swipeToNextPage()
+            },
+            onSwipeRight = {
+                processPhoto(swiperState.currentPage)
+                swiperState.swipeToNextPage()
+            },
         ) {
             SubcomposeAsyncImage(
                 modifier = Modifier.fillMaxSize(),
