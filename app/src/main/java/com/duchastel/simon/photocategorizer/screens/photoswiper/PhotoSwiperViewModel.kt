@@ -113,8 +113,6 @@ class PhotoSwiperViewModel @Inject constructor(
 
     }
 
-    private var count = 0
-
     private suspend fun processRightSwipe(photo: DisplayPhoto) {
         withContext(Dispatchers.IO) {
             photoRepository.movePhoto(
@@ -125,7 +123,12 @@ class PhotoSwiperViewModel @Inject constructor(
     }
 
     private suspend fun processUpSwipe(photo: DisplayPhoto) {
-
+        withContext(Dispatchers.IO) {
+            photoRepository.movePhoto(
+                originalPath = photo.path,
+                newPath ="/camera test/camera roll archive/${photo.fileName}",
+            )
+        }
     }
 
     // state definitions and constants

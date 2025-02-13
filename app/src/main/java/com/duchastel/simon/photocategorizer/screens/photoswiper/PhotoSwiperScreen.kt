@@ -93,7 +93,7 @@ private fun PhotoSwiperContent(
                     modifier = Modifier
                         .weight(1f)
                         .padding(32.dp),
-                    text = "Ignore",
+                    text = "Archive",
                     color = Color.White,
                     fontSize = 32.sp,
                 )
