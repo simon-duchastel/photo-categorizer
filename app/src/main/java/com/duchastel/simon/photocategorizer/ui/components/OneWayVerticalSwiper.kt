@@ -16,6 +16,9 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -137,14 +140,17 @@ interface VerticalSwiperState {
 }
 
 @Composable
-fun rememberVerticalSwiperState(pageCount: () -> Int): VerticalSwiperState = remember {
-    DefaultVerticalSwiperState(pageCount = pageCount)
+fun rememberVerticalSwiperState(pageCount: () -> Int): VerticalSwiperState {
+    return rememberSaveable(saver = DefaultVerticalSwiperState.Saver) {
+        DefaultVerticalSwiperState(pageCount = pageCount)
+    }
 }
 
 private class DefaultVerticalSwiperState(
+    currentPage: Int = 0,
     pageCount: () -> Int
 ): VerticalSwiperState {
-    override var currentPage by mutableIntStateOf(0)
+    override var currentPage by mutableIntStateOf(currentPage)
         private set
 
     var pageCountState = mutableStateOf(pageCount)
@@ -153,5 +159,22 @@ private class DefaultVerticalSwiperState(
 
     override fun swipeToNextPage() {
         currentPage++
+    }
+
+    companion object {
+        val Saver: Saver<DefaultVerticalSwiperState, *> = listSaver(
+            save = {
+                listOf(
+                    it.currentPage,
+                    it.pageCount,
+                )
+            },
+            restore = {
+                DefaultVerticalSwiperState(
+                    currentPage = it[0],
+                    pageCount = { it[1] }
+                )
+            }
+        )
     }
 }
