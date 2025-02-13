@@ -20,12 +20,14 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
@@ -41,7 +43,6 @@ fun OneWayVerticalSwiper(
     val threshold by remember(containerHeight) { derivedStateOf { containerHeight / 2.5f } }
 
     var offsetY by remember { mutableFloatStateOf(0f) }
-    var containerFlyingOffScreen by remember { mutableStateOf(false) }
     var newContainerAnimatingIn by remember { mutableStateOf(false) }
 
     // animate in the new container from offset=containerHeight to offset=0
@@ -53,7 +54,7 @@ fun OneWayVerticalSwiper(
     // key(currentIndex) forces the animation to reset every time the index changes
     val animatedOffset by key(swiperState.currentPage) {
         animateFloatAsState(
-            targetValue = if (containerFlyingOffScreen) {
+            targetValue = if (swiperState.containerFlyingOffScreen) {
                 containerHeight * -1.10f // add 10% make sure we go past the top of the container
             } else if (!newContainerAnimatingIn) {
                 // ensure the container doesn't go below the screen when not animating in
@@ -66,9 +67,9 @@ fun OneWayVerticalSwiper(
                 stiffness = Spring.StiffnessMedium,
             ),
             finishedListener = {
-                if (containerFlyingOffScreen) {
+                if (swiperState.containerFlyingOffScreen) {
                     // Begin animating in new container once old one is off-screen
-                    containerFlyingOffScreen = false
+                    swiperState.stopContainerAnimation()
                     newContainerAnimatingIn = true
                     offsetY = containerHeight.toFloat()
                     onSwipe(swiperState.currentPage)
@@ -93,7 +94,7 @@ fun OneWayVerticalSwiper(
                 detectVerticalDragGestures(
                     onDragEnd = {
                         if (offsetY < -threshold) {
-                            containerFlyingOffScreen = true
+                            swiperState.animateContainerOffScreenImmediate()
                         } else {
                             // Reset position without changing indices
                             offsetY = 0f
@@ -102,7 +103,7 @@ fun OneWayVerticalSwiper(
                     onVerticalDrag = { change, dragAmount ->
                         change.consume()
                         // Update scrolling and disallow downward scrolling when not dragging
-                        if (!containerFlyingOffScreen && (dragAmount < 0 || offsetY < 0)) {
+                        if (!swiperState.containerFlyingOffScreen && (dragAmount < 0 || offsetY < 0)) {
                             offsetY += dragAmount
                         }
                     }
@@ -135,8 +136,12 @@ fun OneWayVerticalSwiper(
 interface VerticalSwiperState {
     val pageCount: Int
     val currentPage: Int
+    val containerFlyingOffScreen: Boolean
 
     fun swipeToNextPage()
+    suspend fun animateContainerOffScreen()
+    fun animateContainerOffScreenImmediate()
+    fun stopContainerAnimation()
 }
 
 @Composable
@@ -150,7 +155,12 @@ private class DefaultVerticalSwiperState(
     currentPage: Int = 0,
     pageCount: () -> Int
 ): VerticalSwiperState {
+
+
     override var currentPage by mutableIntStateOf(currentPage)
+        private set
+
+    override var containerFlyingOffScreen by mutableStateOf(false)
         private set
 
     var pageCountState = mutableStateOf(pageCount)
@@ -159,6 +169,19 @@ private class DefaultVerticalSwiperState(
 
     override fun swipeToNextPage() {
         currentPage++
+    }
+
+    override fun animateContainerOffScreenImmediate() {
+        containerFlyingOffScreen = true
+    }
+
+    override suspend fun animateContainerOffScreen() {
+        containerFlyingOffScreen = true
+        snapshotFlow { containerFlyingOffScreen }.first { println("TODO - GOT IT"); !it } // wait for it to be false again
+    }
+
+    override fun stopContainerAnimation() {
+        containerFlyingOffScreen = false
     }
 
     companion object {

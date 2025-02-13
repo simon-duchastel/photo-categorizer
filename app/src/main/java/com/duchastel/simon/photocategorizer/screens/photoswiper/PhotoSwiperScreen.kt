@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -31,6 +32,7 @@ import com.duchastel.simon.photocategorizer.ui.components.HorizontalSwiper
 import com.duchastel.simon.photocategorizer.ui.components.OneWayVerticalSwiper
 import com.duchastel.simon.photocategorizer.ui.components.SkeletonLoader
 import com.duchastel.simon.photocategorizer.ui.components.rememberVerticalSwiperState
+import kotlinx.coroutines.launch
 
 @Composable
 fun PhotoSwiperScreen(
@@ -74,6 +76,7 @@ private fun PhotoSwiperContent(
     }
 
     val swiperState = rememberVerticalSwiperState { photos.size }
+    val coroutineScope = rememberCoroutineScope()
     OneWayVerticalSwiper(
         modifier = Modifier.fillMaxSize(),
         swiperState = swiperState,
@@ -117,12 +120,19 @@ private fun PhotoSwiperContent(
                 )
             },
             onSwipeLeft = {
-                processPhoto(swiperState.currentPage, SwipeDirection.Left)
-                swiperState.swipeToNextPage()
+                coroutineScope.launch {
+                    swiperState.animateContainerOffScreen()
+                    println("TODO - done")
+                    processPhoto(swiperState.currentPage, SwipeDirection.Left)
+                    swiperState.swipeToNextPage()
+                }
             },
             onSwipeRight = {
-                processPhoto(swiperState.currentPage, SwipeDirection.Right)
-                swiperState.swipeToNextPage()
+                coroutineScope.launch {
+                    swiperState.animateContainerOffScreen()
+                    processPhoto(swiperState.currentPage, SwipeDirection.Right)
+                    swiperState.swipeToNextPage()
+                }
             },
         ) {
             SubcomposeAsyncImage(
