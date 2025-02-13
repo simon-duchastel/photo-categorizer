@@ -26,6 +26,7 @@ data class FileMetadata(
     @Json(name = "name") val name: String,
     @Json(name = "id") val id: String?,
     @Json(name = "path_lower") val pathLower: String?,
+    @Json(name = "client_modified") val clientModified: String,
     @Json(name = ".tag") val tag: FileTag,
 )
 
@@ -43,4 +44,21 @@ data class TemporaryLinkRequest(
 @JsonClass(generateAdapter = true)
 data class TemporaryLinkResponse(
     @Json(name = "link") val link: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class MoveFileRequest(
+    @Json(name = "from_path") val from: String,
+    @Json(name = "to_path") val to: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class MoveFileResponse(
+    @Json(name = "error") val error: DropboxApiError?,
+    @Json(name = "error_summary") val errorSummary: String?,
+)
+
+@JsonClass(generateAdapter = true)
+data class DropboxApiError(
+    @Json(name = ".tag") val tag: String,
 )
