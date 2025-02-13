@@ -19,4 +19,9 @@ interface DropboxFileApi {
     suspend fun getUnauthenticatedLink(
         @Body body: TemporaryLinkRequest,
     ): TemporaryLinkResponse
+
+    @POST("files/move_v2")
+    suspend fun moveFile(
+        @Body body: MoveFileRequest,
+    ): MoveFileResponse
 }

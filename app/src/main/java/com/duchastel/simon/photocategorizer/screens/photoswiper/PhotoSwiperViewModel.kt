@@ -6,6 +6,7 @@ import coil3.request.ImageRequest
 import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
 import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -14,7 +15,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,12 +25,17 @@ class PhotoSwiperViewModel @Inject constructor(
     @Dropbox private val photoRepository: PhotoRepository
 ) : ViewModel() {
 
+    // state and init
+
     private val _state: MutableStateFlow<State> = MutableStateFlow(State())
     val state: StateFlow<State> = _state
 
     init {
         viewModelScope.launch {
-            val photos = photoRepository.getPhotos().map { DisplayPhoto(path = it.path) }
+            val photos = withContext(Dispatchers.IO) {
+                photoRepository.getPhotos("/camera test/camera roll")
+                    .map { DisplayPhoto(path = it.path) }
+            }
             _state.update { it.copy(photos = photos) }
         }
 
@@ -44,9 +52,20 @@ class PhotoSwiperViewModel @Inject constructor(
         }
     }
 
-    fun processPhoto(index: Int) {
-        _state.update { oldState ->
+    // public functions
+
+    fun processPhoto(index: Int, direction: SwipeDirection) {
+        val currentState = _state.updateAndGet { oldState ->
             oldState.copy(photoIndex = index + 1)
+        }
+
+        val photo = currentState.photos[index]
+        viewModelScope.launch {
+            when (direction) {
+                SwipeDirection.Left -> processLeftSwipe(photo)
+                SwipeDirection.Right -> processRightSwipe(photo)
+                SwipeDirection.Up -> processUpSwipe(photo)
+            }
         }
     }
 
@@ -61,6 +80,8 @@ class PhotoSwiperViewModel @Inject constructor(
             })
         }
     }
+
+    // private functions
 
     private suspend fun syncDisplayUrls(
         photos: List<DisplayPhoto>,
@@ -88,6 +109,27 @@ class PhotoSwiperViewModel @Inject constructor(
             }.awaitAll()
     }
 
+    private suspend fun processLeftSwipe(photo: DisplayPhoto) {
+
+    }
+
+    private var count = 0
+
+    private suspend fun processRightSwipe(photo: DisplayPhoto) {
+        withContext(Dispatchers.IO) {
+            photoRepository.movePhoto(
+                originalPath = photo.path,
+                newPath ="/camera test/first event/${photo.fileName}",
+            )
+        }
+    }
+
+    private suspend fun processUpSwipe(photo: DisplayPhoto) {
+
+    }
+
+    // state definitions and constants
+
     data class State(
         val photos: List<DisplayPhoto> = emptyList(),
         val photoIndex: Int = 0,
@@ -97,7 +139,9 @@ class PhotoSwiperViewModel @Inject constructor(
         val path: String,
         val displayUrl: String? = null,
         val imageRequest: ImageRequest? = null,
-    )
+    ) {
+        val fileName: String = path.split("/").last()
+    }
 
     companion object {
         const val PHOTO_BUFFER_SIZE = 5

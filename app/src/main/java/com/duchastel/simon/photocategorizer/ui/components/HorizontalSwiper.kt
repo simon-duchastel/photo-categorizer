@@ -18,7 +18,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
-import com.duchastel.simon.photocategorizer.screens.photoswiper.SwipeDirection
+import com.duchastel.simon.photocategorizer.screens.photoswiper.HorizontalSwipeDirection
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
@@ -33,12 +33,12 @@ fun HorizontalSwiper(
 ) {
     val swipeThreshold = 300f
     var offsetX by remember { mutableFloatStateOf(0f) }
-    val swipeDirection: SwipeDirection? by remember {
+    val swipeDirection: HorizontalSwipeDirection? by remember {
         derivedStateOf {
             if (offsetX < 0) {
-                SwipeDirection.Left
+                HorizontalSwipeDirection.Left
             } else if (offsetX > 0) {
-                SwipeDirection.Right
+                HorizontalSwipeDirection.Right
             } else {
                 null
             }
@@ -84,8 +84,8 @@ fun HorizontalSwiper(
                 .alpha(percentSwiped),
         ) {
             when (swipeDirection) {
-                SwipeDirection.Left -> swipeLeftBackground()
-                SwipeDirection.Right -> swipeRightBackground()
+                HorizontalSwipeDirection.Left -> swipeLeftBackground()
+                HorizontalSwipeDirection.Right -> swipeRightBackground()
                 null -> Unit // do nothing
             }
         }
