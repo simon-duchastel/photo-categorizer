@@ -26,11 +26,9 @@ include(":app:modules:filemanager")
 include(":app:modules:dropbox")
 include(":app:modules:storage")
 
-// New lib modules
 include(":app:modules:lib:navigation")
 include(":app:modules:lib:utils")
 
-// New UI modules
 include(":app:modules:ui:theme")
 include(":app:modules:ui:components")
 include(":app:modules:ui:screens:login")
