@@ -44,25 +44,32 @@ android {
 }
 
 dependencies {
+    // Existing modules
     implementation(project(":app:modules:auth"))
     implementation(project(":app:modules:filemanager"))
     implementation(project(":app:modules:storage"))
-
     implementation(project(":app:modules:dropbox"))
+    
+    // New lib modules
+    implementation(project(":app:modules:lib:navigation"))
+    implementation(project(":app:modules:lib:utils"))
+    
+    // New UI modules 
+    implementation(project(":app:modules:ui:theme"))
+    implementation(project(":app:modules:ui:components"))
+    implementation(project(":app:modules:ui:screens:login"))
+    implementation(project(":app:modules:ui:screens:photoswiper"))
+    implementation(project(":app:modules:ui:screens:settings"))
+    implementation(project(":app:modules:ui:screens:splash"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-
-    implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
-    implementation(libs.kotlinx.serialization.json)
 
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)

@@ -1,0 +1,16 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /Users/simond/Documents/git/photo-categorizer/app/modules/ui/components/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest5795042861518248354.xml:2:13-83
+INJECTED from /Users/simond/Documents/git/photo-categorizer/app/modules/ui/components/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest5795042861518248354.xml:2:13-83
+	package
+		INJECTED from /Users/simond/Documents/git/photo-categorizer/app/modules/ui/components/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest5795042861518248354.xml
+	xmlns:android
+		ADDED from /Users/simond/Documents/git/photo-categorizer/app/modules/ui/components/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest5795042861518248354.xml:2:23-81
+uses-sdk
+INJECTED from /Users/simond/Documents/git/photo-categorizer/app/modules/ui/components/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest5795042861518248354.xml reason: use-sdk injection requested
+INJECTED from /Users/simond/Documents/git/photo-categorizer/app/modules/ui/components/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest5795042861518248354.xml
+INJECTED from /Users/simond/Documents/git/photo-categorizer/app/modules/ui/components/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest5795042861518248354.xml
+	android:targetSdkVersion
+		INJECTED from /Users/simond/Documents/git/photo-categorizer/app/modules/ui/components/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest5795042861518248354.xml
+	android:minSdkVersion
+		INJECTED from /Users/simond/Documents/git/photo-categorizer/app/modules/ui/components/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest5795042861518248354.xml
