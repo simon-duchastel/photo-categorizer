@@ -44,20 +44,21 @@ android {
 }
 
 dependencies {
-    implementation(project(":app:modules:auth"))
-    implementation(project(":app:modules:filemanager"))
-    implementation(project(":app:modules:storage"))
-    implementation(project(":app:modules:dropbox"))
+    // Business logic modules
+    implementation(project(":modules:lib:auth"))
+    implementation(project(":modules:lib:filemanager"))
+    implementation(project(":modules:lib:storage"))
+    implementation(project(":modules:lib:dropbox"))
+    implementation(project(":modules:lib:navigation"))
+    implementation(project(":modules:lib:utils"))
     
-    implementation(project(":app:modules:lib:navigation"))
-    implementation(project(":app:modules:lib:utils"))
-    
-    implementation(project(":app:modules:ui:theme"))
-    implementation(project(":app:modules:ui:components"))
-    implementation(project(":app:modules:ui:screens:login"))
-    implementation(project(":app:modules:ui:screens:photoswiper"))
-    implementation(project(":app:modules:ui:screens:settings"))
-    implementation(project(":app:modules:ui:screens:splash"))
+    // UI modules
+    implementation(project(":modules:ui:theme"))
+    implementation(project(":modules:ui:components"))
+    implementation(project(":modules:ui:screens:login"))
+    implementation(project(":modules:ui:screens:photoswiper"))
+    implementation(project(":modules:ui:screens:settings"))
+    implementation(project(":modules:ui:screens:splash"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

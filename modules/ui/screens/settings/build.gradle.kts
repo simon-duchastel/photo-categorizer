@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.duchastel.simon.photocategorizer.screens.photoswiper"
+    namespace = "com.duchastel.simon.photocategorizer.screens.settings"
     compileSdk = 35
 
     defaultConfig {
@@ -40,13 +40,13 @@ android {
 
 dependencies {
     // UI dependencies
-    implementation(project(":app:modules:ui:theme"))
-    implementation(project(":app:modules:ui:components"))
+    implementation(project(":modules:ui:theme"))
+    implementation(project(":modules:ui:components"))
     
     // Business logic dependencies
-    implementation(project(":app:modules:filemanager"))
-    implementation(project(":app:modules:dropbox"))
-    implementation(project(":app:modules:storage"))
+    implementation(project(":modules:lib:auth"))
+    implementation(project(":modules:lib:dropbox"))
+    implementation(project(":modules:lib:storage"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -56,9 +56,6 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-
-    implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
 
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)

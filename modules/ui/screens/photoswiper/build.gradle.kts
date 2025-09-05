@@ -4,11 +4,10 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    kotlin("plugin.serialization") version "2.0.21"
 }
 
 android {
-    namespace = "com.duchastel.simon.photocategorizer.navigation"
+    namespace = "com.duchastel.simon.photocategorizer.screens.photoswiper"
     compileSdk = 35
 
     defaultConfig {
@@ -40,27 +39,26 @@ android {
 }
 
 dependencies {
-    // Navigation needs access to auth for login state
-    implementation(project(":app:modules:auth"))
-    implementation(project(":app:modules:storage"))
+    // UI dependencies
+    implementation(project(":modules:ui:theme"))
+    implementation(project(":modules:ui:components"))
     
-    // UI modules for screens
-    implementation(project(":app:modules:ui:screens:login"))
-    implementation(project(":app:modules:ui:screens:photoswiper"))
-    implementation(project(":app:modules:ui:screens:settings"))
-    implementation(project(":app:modules:ui:screens:splash"))
+    // Business logic dependencies
+    implementation(project(":modules:lib:filemanager"))
+    implementation(project(":modules:lib:dropbox"))
+    implementation(project(":modules:lib:storage"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)

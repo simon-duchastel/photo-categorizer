@@ -1,12 +1,13 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.duchastel.simon.photocategorizer.dropbox"
+    namespace = "com.duchastel.simon.photocategorizer.screens.login"
     compileSdk = 35
 
     defaultConfig {
@@ -32,30 +33,32 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    buildFeatures {
+        compose = true
+    }
 }
 
 dependencies {
-    implementation(project(":app:modules:auth"))
-    implementation(project(":app:modules:filemanager"))
+    // UI dependencies
+    implementation(project(":modules:ui:theme"))
+    implementation(project(":modules:ui:components"))
+    
+    // Auth for login functionality  
+    implementation(project(":modules:lib:auth"))
+    implementation(project(":modules:lib:dropbox"))
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
 
-    implementation(libs.openid.appauth)
-
-    implementation(libs.hilt)
     ksp(libs.hilt.compiler)
-
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.moshi)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging)
-    implementation(libs.moshi)
-    ksp(libs.moshi.codegen)
+    implementation(libs.hilt)
+    implementation(libs.hilt.navigation.compose)
 
     testImplementation(libs.junit)
-
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

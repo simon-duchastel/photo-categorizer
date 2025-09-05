@@ -38,7 +38,7 @@ android {
 
 dependencies {
     // Depends on theme for consistent styling
-    implementation(project(":app:modules:ui:theme"))
+    implementation(project(":modules:ui:theme"))
 
     implementation(libs.androidx.core.ktx)
     implementation(platform(libs.androidx.compose.bom))

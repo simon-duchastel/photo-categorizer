@@ -20,18 +20,20 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Photo Categorizer"
-include(":app")
-include(":app:modules:auth")
-include(":app:modules:filemanager")
-include(":app:modules:dropbox")
-include(":app:modules:storage")
+include(":modules:app")
 
-include(":app:modules:lib:navigation")
-include(":app:modules:lib:utils")
+// Business logic modules
+include(":modules:lib:auth")
+include(":modules:lib:filemanager")
+include(":modules:lib:dropbox")
+include(":modules:lib:storage")
+include(":modules:lib:navigation")
+include(":modules:lib:utils")
 
-include(":app:modules:ui:theme")
-include(":app:modules:ui:components")
-include(":app:modules:ui:screens:login")
-include(":app:modules:ui:screens:photoswiper")
-include(":app:modules:ui:screens:settings")
-include(":app:modules:ui:screens:splash")
+// UI modules
+include(":modules:ui:theme")
+include(":modules:ui:components")
+include(":modules:ui:screens:login")
+include(":modules:ui:screens:photoswiper")
+include(":modules:ui:screens:settings")
+include(":modules:ui:screens:splash")
