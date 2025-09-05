@@ -1,14 +1,11 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+# IDE directories and files
+.idea/
 .DS_Store
-/build
+# Build directories - ignore build/ anywhere in the project
+**/build/
 /captures
 .externalNativeBuild
 .cxx

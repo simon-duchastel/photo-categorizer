@@ -1,0 +1,13 @@
+# UI Components Module
+
+Reusable UI components used throughout the app.
+
+## Components
+- `HorizontalSwiper` - Swipeable photo viewer component
+- `OneWayVerticalSwiper` - Vertical swipe component
+- `Shimmer` - Loading shimmer effect
+- `SkeletonLoader` - Skeleton loading animations
+- `SwipeDirection` - Swipe direction enumeration
+
+## Purpose
+Provides a library of reusable UI components to maintain consistency and reduce duplication across different screens.
