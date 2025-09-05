@@ -44,17 +44,14 @@ android {
 }
 
 dependencies {
-    // Existing modules
     implementation(project(":app:modules:auth"))
     implementation(project(":app:modules:filemanager"))
     implementation(project(":app:modules:storage"))
     implementation(project(":app:modules:dropbox"))
     
-    // New lib modules
     implementation(project(":app:modules:lib:navigation"))
     implementation(project(":app:modules:lib:utils"))
     
-    // New UI modules 
     implementation(project(":app:modules:ui:theme"))
     implementation(project(":app:modules:ui:components"))
     implementation(project(":app:modules:ui:screens:login"))
