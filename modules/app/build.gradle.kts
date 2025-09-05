@@ -72,6 +72,8 @@ dependencies {
     // Image loading
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.openid.appauth)
 
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)
