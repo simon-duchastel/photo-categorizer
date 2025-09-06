@@ -13,14 +13,18 @@ import kotlin.time.Instant
 /**
  * Implementation of RateLimiter that ensures rate limiting with cooperative scheduling.
  * 
- * This implementation ensures that at most [MAX_OPERATIONS_PER_SECOND] tasks complete in any 1-second window.
- * Each work item coordinates with others through shared state, without needing a background processor.
+ * This implementation ensures that at most [MAX_OPERATIONS_PER_WINDOW] tasks complete in any
+ * [RATE_LIMIT_WINDOW] seconds window.
+ * Each work item coordinates with others through shared state, without needing a background
+ * processor.
  */
 @OptIn(ExperimentalTime::class)
-class RateLimiterImpl @Inject internal constructor() : RateLimiter {
+class RateLimiterImpl @Inject internal constructor(
+    private val clock: Clock = Clock.System,
+) : RateLimiter {
 
     companion object {
-        private const val MAX_OPERATIONS_PER_SECOND = 1
+        private const val MAX_OPERATIONS_PER_WINDOW = 1
         private val RATE_LIMIT_WINDOW = 1.seconds
     }
 
@@ -60,19 +64,16 @@ class RateLimiterImpl @Inject internal constructor() : RateLimiter {
             
             return result
         } finally {
-            // Always signal next work item, even on failure/cancellation
             signalNextWorkItem()
         }
     }
     
     private suspend fun signalNextWorkItem() {
         mutex.withLock {
-            // Remove ourselves from the queue (we're done)
             if (workQueue.isNotEmpty()) {
-                workQueue.removeAt(0) // Remove the item that just completed
+                workQueue.removeAt(0)
             }
-            
-            // Signal the next item to start (if any)
+
             if (workQueue.isNotEmpty()) {
                 val nextItem = workQueue[0]
                 nextItem.readyToExecute.complete(Unit)
@@ -82,12 +83,11 @@ class RateLimiterImpl @Inject internal constructor() : RateLimiter {
     
     private suspend fun enforceRateLimit() {
         val delayTime = mutex.withLock {
-            // Clean up old completion times outside the window
-            val now = Clock.System.now()
+            val now = clock.now()
             completionTimes.removeAll { it < now - RATE_LIMIT_WINDOW }
 
             // If we're at the rate limit, calculate how long to wait
-            if (completionTimes.size >= MAX_OPERATIONS_PER_SECOND) {
+            if (completionTimes.size >= MAX_OPERATIONS_PER_WINDOW) {
                 val oldestInWindow = completionTimes.minOrNull()
                 if (oldestInWindow != null) {
                     val timeUntilCanProceed = (oldestInWindow + RATE_LIMIT_WINDOW) - now
@@ -97,16 +97,14 @@ class RateLimiterImpl @Inject internal constructor() : RateLimiter {
                 } else null
             } else null
         }
-        
-        // Apply delay outside of mutex to avoid blocking other operations
+
         delayTime?.let { delay(it) }
     }
     
     private suspend fun recordCompletion() {
-        val now = Clock.System.now()
+        val now = clock.now()
         mutex.withLock {
             completionTimes.add(now)
-            // Clean up old times to prevent memory leaks
             completionTimes.removeAll { it < now - RATE_LIMIT_WINDOW }
         }
     }

@@ -7,11 +7,13 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlin.time.ExperimentalTime
 
 @Module
 @InstallIn(SingletonComponent::class)
 object ConcurrencyModule {
 
+    @OptIn(ExperimentalTime::class)
     @Provides
     @Singleton
     fun provideRateLimiter(): RateLimiter {
