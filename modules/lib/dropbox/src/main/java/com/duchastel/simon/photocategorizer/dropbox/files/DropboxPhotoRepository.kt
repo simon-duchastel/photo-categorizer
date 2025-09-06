@@ -1,5 +1,6 @@
 package com.duchastel.simon.photocategorizer.dropbox.files
 
+import com.duchastel.simon.photocategorizer.concurrency.BufferedScheduler
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
 import com.duchastel.simon.photocategorizer.dropbox.network.FileTag
 import com.duchastel.simon.photocategorizer.dropbox.network.ListFolderContinueRequest
@@ -9,68 +10,21 @@ import com.duchastel.simon.photocategorizer.dropbox.network.TemporaryLinkRequest
 import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import com.duchastel.simon.photocategorizer.filemanager.Photo
 import com.duchastel.simon.photocategorizer.filemanager.SUPPORTED_FILE_EXTENSIONS
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 @Singleton
 internal class DropboxPhotoRepository @Inject constructor(
     private val networkApi: DropboxFileApi,
+    private val bufferedScheduler: BufferedScheduler,
 ): PhotoRepository {
 
-    private data class MovePhotoRequest(
-        val originalPath: String,
-        val newPath: String,
-        val completion: CompletableDeferred<Unit>
-    )
-
-    private class RateLimiter(maxOperationsPerSecond: Int) {
-        private val intervalMs = 1.seconds / maxOperationsPerSecond
-        private val lastExecutionTime = AtomicLong(0)
-
-        @OptIn(ExperimentalTime::class)
-        suspend fun acquire() {
-            val currentTime = Clock.System.now()
-            val lastTime = Instant.fromEpochMilliseconds(lastExecutionTime.get())
-            val timeSinceLastExecution = currentTime - lastTime
-            
-            if (timeSinceLastExecution < intervalMs) {
-                val delayTime = intervalMs - timeSinceLastExecution
-                delay(delayTime)
-            }
-
-            lastExecutionTime.set(Clock.System.now().toEpochMilliseconds())
-        }
-    }
-
     companion object {
-        private const val MAX_OPERATIONS_PER_SECOND = 1
-        private const val BATCH_THRESHOLD = 3
         private const val MAX_RETRY_ATTEMPTS = 3
         private const val RETRY_DELAY_MS = 2000L
-    }
-
-    private val moveQueue = Channel<MovePhotoRequest>(capacity = Channel.UNLIMITED)
-    private val rateLimiter = RateLimiter(MAX_OPERATIONS_PER_SECOND)
-    private val queueProcessorScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    init {
-        queueProcessorScope.launch {
-            processQueueContinuously()
-        }
     }
 
     override suspend fun getPhotos(path: String): List<Photo> {
@@ -127,55 +81,21 @@ internal class DropboxPhotoRepository @Inject constructor(
             throw IllegalArgumentException("Path must start with '/'")
         }
 
-        val completionDeferred = CompletableDeferred<Unit>()
-        val request = MovePhotoRequest(originalPath, newPath, completionDeferred)
-        
-        moveQueue.trySend(request)
-        
-        // Suspend until the operation is actually completed
-        completionDeferred.await()
-    }
-
-    private suspend fun processQueueContinuously() {
-        val batchBuffer = mutableListOf<MovePhotoRequest>()
-
-        for (request in moveQueue) {
-            batchBuffer.add(request)
-
-            if (batchBuffer.size >= BATCH_THRESHOLD) {
-                processBatch(batchBuffer.toList())
-                batchBuffer.clear()
-            } else {
-                val singleRequest = batchBuffer.removeAt(0)
-                processSingleRequest(singleRequest)
-
-                while (batchBuffer.isNotEmpty()) {
-                    val bufferedRequest = batchBuffer.removeAt(0)
-                    processSingleRequest(bufferedRequest)
-                }
-            }
+        bufferedScheduler.scheduleWork {
+            movePhotoWithRetry(originalPath, newPath)
         }
     }
 
-    private suspend fun processSingleRequest(request: MovePhotoRequest) {
+    private suspend fun movePhotoWithRetry(originalPath: String, newPath: String, attempt: Int = 1) {
         try {
-            rateLimiter.acquire()
-            executeActualMove(request.originalPath, request.newPath)
-            request.completion.complete(Unit)
+            executeActualMove(originalPath, newPath)
         } catch (e: Exception) {
-            if (shouldRetry(e)) {
-                retryWithBackoff(request)
+            if (shouldRetry(e) && attempt <= MAX_RETRY_ATTEMPTS) {
+                delay((RETRY_DELAY_MS * attempt).milliseconds)
+                movePhotoWithRetry(originalPath, newPath, attempt + 1)
             } else {
-                request.completion.completeExceptionally(e)
+                throw e
             }
-        }
-    }
-
-    private suspend fun processBatch(requests: List<MovePhotoRequest>) {
-        // For batch processing, we process them sequentially with rate limiting
-        // This can be optimized later with actual batch API calls if available
-        for (request in requests) {
-            processSingleRequest(request)
         }
     }
 
@@ -196,28 +116,6 @@ internal class DropboxPhotoRepository @Inject constructor(
         return when (exception) {
             is HttpException -> exception.code() == 429
             else -> false
-        }
-    }
-
-    private suspend fun retryWithBackoff(request: MovePhotoRequest, attempt: Int = 1) {
-        if (attempt > MAX_RETRY_ATTEMPTS) {
-            request.completion.completeExceptionally(
-                Exception("Max retry attempts reached for moving ${request.originalPath}")
-            )
-            return
-        }
-
-        try {
-            delay((RETRY_DELAY_MS * attempt).milliseconds)
-            rateLimiter.acquire()
-            executeActualMove(request.originalPath, request.newPath)
-            request.completion.complete(Unit)
-        } catch (e: Exception) {
-            if (shouldRetry(e)) {
-                retryWithBackoff(request, attempt + 1)
-            } else {
-                request.completion.completeExceptionally(e)
-            }
         }
     }
 }
