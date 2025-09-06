@@ -8,7 +8,7 @@ The concurrency module contains utilities for managing asynchronous work executi
 
 ## Components
 
-### BufferedScheduler Interface
+### RateLimiter Interface
 - **Purpose**: Defines contract for scheduling work with rate limiting
 - **Key Method**: `suspend fun <T> scheduleWork(work: suspend () -> T): T`
 - **Behavior**: 
@@ -16,8 +16,8 @@ The concurrency module contains utilities for managing asynchronous work executi
   - Queues work items when other work is in progress
   - Applies rate limiting between work completions
 
-### BufferedSchedulerImpl Class
-- **Purpose**: Concrete implementation of BufferedScheduler with proper rate limiting
+### RateLimiterImpl Class
+- **Purpose**: Concrete implementation of RateLimiter with proper rate limiting
 - **Rate Limiting**: Ensures at most 1 operation per second in a sliding window
 - **Queue Management**: FIFO queue with proper coroutine cancellation support
 - **Thread Safety**: Uses coroutine-safe mutex for state management
@@ -25,16 +25,16 @@ The concurrency module contains utilities for managing asynchronous work executi
 
 ### ConcurrencyModule
 - **Purpose**: Hilt dependency injection module
-- **Provides**: Binds BufferedSchedulerImpl to BufferedScheduler interface
+- **Provides**: Binds RateLimiterImpl to RateLimiter interface
 
 ## Usage Example
 
 ```kotlin
 @Inject
-private lateinit var bufferedScheduler: BufferedScheduler
+private lateinit var rateLimiter: RateLimiter
 
 suspend fun performRateLimitedOperation() {
-    val result = bufferedScheduler.scheduleWork {
+    val result = rateLimiter.scheduleWork {
         // Your work that needs rate limiting
         apiCall()
     }

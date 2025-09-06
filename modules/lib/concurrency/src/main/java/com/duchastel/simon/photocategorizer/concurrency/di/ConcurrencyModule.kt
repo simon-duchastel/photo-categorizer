@@ -1,7 +1,7 @@
 package com.duchastel.simon.photocategorizer.concurrency.di
 
-import com.duchastel.simon.photocategorizer.concurrency.BufferedScheduler
-import com.duchastel.simon.photocategorizer.concurrency.BufferedSchedulerImpl
+import com.duchastel.simon.photocategorizer.concurrency.RateLimiter
+import com.duchastel.simon.photocategorizer.concurrency.RateLimiterImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +14,7 @@ object ConcurrencyModule {
 
     @Provides
     @Singleton
-    fun provideBufferedScheduler(): BufferedScheduler {
-        return BufferedSchedulerImpl()
+    fun provideRateLimiter(): RateLimiter {
+        return RateLimiterImpl()
     }
 }

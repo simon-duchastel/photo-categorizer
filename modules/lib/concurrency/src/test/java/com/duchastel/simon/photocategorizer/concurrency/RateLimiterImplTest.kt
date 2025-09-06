@@ -11,20 +11,20 @@ import kotlin.test.assertTrue
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class BufferedSchedulerImplTest {
+class RateLimiterImplTest {
 
-    private lateinit var scheduler: BufferedSchedulerImpl
+    private lateinit var scheduler: RateLimiterImpl
 
     @Before
     fun setup() {
-        scheduler = BufferedSchedulerImpl()
+        scheduler = RateLimiterImpl()
     }
 
     @Test
     fun `scheduleWork should execute immediately when no other work is scheduled`() = runTest {
         var executed = false
         
-        val result = scheduler.scheduleWork {
+        val result = scheduler.withRateLimit {
             executed = true
             "result"
         }
@@ -35,7 +35,7 @@ class BufferedSchedulerImplTest {
 
     @Test
     fun `scheduleWork should return work result`() = runTest {
-        val result = scheduler.scheduleWork {
+        val result = scheduler.withRateLimit {
             42
         }
         
@@ -45,7 +45,7 @@ class BufferedSchedulerImplTest {
     @Test
     fun `scheduleWork should propagate exceptions`() = runTest {
         assertFailsWith<RuntimeException> {
-            scheduler.scheduleWork {
+            scheduler.withRateLimit {
                 throw RuntimeException("Test exception")
             }
         }
@@ -56,7 +56,7 @@ class BufferedSchedulerImplTest {
         val executionOrder = mutableListOf<Int>()
         
         val job1 = async { 
-            scheduler.scheduleWork {
+            scheduler.withRateLimit {
                 delay(10) // Simulate some work
                 executionOrder.add(1)
                 1
@@ -64,7 +64,7 @@ class BufferedSchedulerImplTest {
         }
         
         val job2 = async {
-            scheduler.scheduleWork {
+            scheduler.withRateLimit {
                 delay(10) // Simulate some work
                 executionOrder.add(2)
                 2
@@ -72,7 +72,7 @@ class BufferedSchedulerImplTest {
         }
         
         val job3 = async {
-            scheduler.scheduleWork {
+            scheduler.withRateLimit {
                 delay(10) // Simulate some work
                 executionOrder.add(3)
                 3
@@ -97,21 +97,21 @@ class BufferedSchedulerImplTest {
         
         // Schedule 3 rapid operations
         val job1 = async { 
-            scheduler.scheduleWork {
+            scheduler.withRateLimit {
                 completionTimes.add(System.currentTimeMillis())
                 "work1"
             }
         }
         
         val job2 = async {
-            scheduler.scheduleWork {
+            scheduler.withRateLimit {
                 completionTimes.add(System.currentTimeMillis())
                 "work2"
             }
         }
         
         val job3 = async {
-            scheduler.scheduleWork {
+            scheduler.withRateLimit {
                 completionTimes.add(System.currentTimeMillis())
                 "work3"
             }
@@ -139,7 +139,7 @@ class BufferedSchedulerImplTest {
     fun `single work item should complete immediately without delay`() = runTest {
         val startTime = System.currentTimeMillis()
         
-        scheduler.scheduleWork {
+        scheduler.withRateLimit {
             "single work"
         }
         
@@ -152,10 +152,10 @@ class BufferedSchedulerImplTest {
 
     @Test
     fun `work items with different return types should work correctly`() = runTest {
-        val stringResult = scheduler.scheduleWork { "string" }
-        val intResult = scheduler.scheduleWork { 42 }
-        val unitResult = scheduler.scheduleWork { }
-        val listResult = scheduler.scheduleWork { listOf(1, 2, 3) }
+        val stringResult = scheduler.withRateLimit { "string" }
+        val intResult = scheduler.withRateLimit { 42 }
+        val unitResult = scheduler.withRateLimit { }
+        val listResult = scheduler.withRateLimit { listOf(1, 2, 3) }
         
         assertEquals("string", stringResult)
         assertEquals(42, intResult)
@@ -170,7 +170,7 @@ class BufferedSchedulerImplTest {
         // First work item succeeds
         val job1 = async {
             try {
-                scheduler.scheduleWork {
+                scheduler.withRateLimit {
                     results.add("work1")
                     "success1"
                 }
@@ -182,7 +182,7 @@ class BufferedSchedulerImplTest {
         // Second work item fails
         val job2 = async {
             try {
-                scheduler.scheduleWork {
+                scheduler.withRateLimit {
                     results.add("work2")
                     throw RuntimeException("Test failure")
                 }
@@ -194,7 +194,7 @@ class BufferedSchedulerImplTest {
         // Third work item succeeds
         val job3 = async {
             try {
-                scheduler.scheduleWork {
+                scheduler.withRateLimit {
                     results.add("work3")
                     "success3"
                 }
@@ -219,7 +219,7 @@ class BufferedSchedulerImplTest {
         // First work succeeds
         val job1 = async {
             try {
-                scheduler.scheduleWork {
+                scheduler.withRateLimit {
                     executionOrder.add("work1")
                     "success"
                 }
@@ -232,7 +232,7 @@ class BufferedSchedulerImplTest {
         // Second work fails
         val job2 = async {
             try {
-                scheduler.scheduleWork {
+                scheduler.withRateLimit {
                     executionOrder.add("work2")
                     throw RuntimeException("Intentional failure")
                 }
@@ -245,7 +245,7 @@ class BufferedSchedulerImplTest {
         // Third work should still execute despite second work failure
         val job3 = async {
             try {
-                scheduler.scheduleWork {
+                scheduler.withRateLimit {
                     executionOrder.add("work3")
                     "success"
                 }

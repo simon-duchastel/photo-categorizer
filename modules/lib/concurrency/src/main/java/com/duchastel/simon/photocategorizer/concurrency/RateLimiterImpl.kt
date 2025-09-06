@@ -11,13 +11,13 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
- * Implementation of BufferedScheduler that ensures rate limiting with cooperative scheduling.
+ * Implementation of RateLimiter that ensures rate limiting with cooperative scheduling.
  * 
  * This implementation ensures that at most [MAX_OPERATIONS_PER_SECOND] tasks complete in any 1-second window.
  * Each work item coordinates with others through shared state, without needing a background processor.
  */
 @OptIn(ExperimentalTime::class)
-class BufferedSchedulerImpl @Inject internal constructor() : BufferedScheduler {
+class RateLimiterImpl @Inject internal constructor() : RateLimiter {
 
     companion object {
         private const val MAX_OPERATIONS_PER_SECOND = 1
@@ -34,31 +34,27 @@ class BufferedSchedulerImpl @Inject internal constructor() : BufferedScheduler {
     private val workQueue = mutableListOf<WorkItem<*>>()
     private val completionTimes = mutableListOf<Instant>()
 
-    override suspend fun <T> scheduleWork(work: suspend () -> T): T {
+    override suspend fun <T> withRateLimit(work: suspend () -> T): T {
         val completion = CompletableDeferred<T>()
         val workItem = WorkItem(work, completion)
-        
+
         val isFirst = mutex.withLock {
             val wasEmpty = workQueue.isEmpty()
             workQueue.add(workItem)
             
             if (wasEmpty) {
-                // First item can execute immediately
                 workItem.readyToExecute.complete(Unit)
             }
             wasEmpty
         }
-        
-        // Wait for our turn
+
         workItem.readyToExecute.await()
-        
+
         try {
-            // Apply rate limiting if not first
             if (!isFirst) {
                 enforceRateLimit()
             }
-            
-            // Execute work
+
             val result = work()
             recordCompletion()
             

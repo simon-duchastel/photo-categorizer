@@ -1,6 +1,6 @@
 package com.duchastel.simon.photocategorizer.dropbox.files
 
-import com.duchastel.simon.photocategorizer.concurrency.BufferedScheduler
+import com.duchastel.simon.photocategorizer.concurrency.RateLimiter
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
 import com.duchastel.simon.photocategorizer.dropbox.network.FileTag
 import com.duchastel.simon.photocategorizer.dropbox.network.ListFolderContinueRequest
@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Singleton
 internal class DropboxPhotoRepository @Inject constructor(
     private val networkApi: DropboxFileApi,
-    private val bufferedScheduler: BufferedScheduler,
+    private val rateLimiter: RateLimiter,
 ): PhotoRepository {
 
     companion object {
@@ -81,7 +81,7 @@ internal class DropboxPhotoRepository @Inject constructor(
             throw IllegalArgumentException("Path must start with '/'")
         }
 
-        bufferedScheduler.scheduleWork {
+        rateLimiter.withRateLimit {
             movePhotoWithRetry(originalPath, newPath)
         }
     }
