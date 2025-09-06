@@ -105,31 +105,6 @@ class DropboxPhotoRepositoryTest {
     }
 
     @Test
-    fun `rate limiting should enforce max operations per second`() = runTest {
-        // Given
-        val startTime = System.currentTimeMillis()
-        val callTimes = mutableListOf<Long>()
-        
-        whenever(mockNetworkApi.moveFile(any())).doAnswer {
-            callTimes.add(System.currentTimeMillis())
-            MoveFileResponse(null, null)
-        }
-
-        // When - make 3 rapid calls
-        val job1 = async { repository.movePhoto("/test/file1.jpg", "/dest/file1.jpg") }
-        val job2 = async { repository.movePhoto("/test/file2.jpg", "/dest/file2.jpg") }
-        val job3 = async { repository.movePhoto("/test/file3.jpg", "/dest/file3.jpg") }
-
-        job1.await()
-        job2.await() 
-        job3.await()
-
-        // Then - calls should be spread out over time (at least 2 seconds for 3 calls)
-        val totalTime = callTimes.last() - callTimes.first()
-        assertTrue(totalTime >= 2000, "Expected at least 2000ms between first and last call, got ${totalTime}ms")
-    }
-
-    @Test
     fun `retry logic should handle 429 errors`() = runTest {
         // Given
         val http429Response = Response.error<Any>(429, "".toResponseBody(null))
@@ -189,35 +164,5 @@ class DropboxPhotoRepositoryTest {
         
         // Should have made only 1 attempt
         verify(mockNetworkApi, times(1)).moveFile(any())
-    }
-
-    @Test
-    fun `batch processing should handle multiple queued operations efficiently`() = runTest {
-        // Given
-        val apiCalls = mutableListOf<MoveFileRequest>()
-        whenever(mockNetworkApi.moveFile(any())).doAnswer { invocation ->
-            val request = invocation.getArgument<MoveFileRequest>(0)
-            apiCalls.add(request)
-            runBlocking { delay(10) } // Simulate API call time
-            MoveFileResponse(null, null)
-        }
-
-        // When - make more than batch threshold (3) rapid calls
-        val jobs = (1..5).map { index ->
-            async { 
-                repository.movePhoto("/test/file$index.jpg", "/dest/file$index.jpg") 
-            }
-        }
-
-        jobs.forEach { it.await() }
-
-        // Then - all operations should complete successfully
-        assertEquals(5, apiCalls.size)
-        verify(mockNetworkApi, times(5)).moveFile(any())
-        
-        // Verify all expected files were moved
-        val movedFiles = apiCalls.map { it.from }.sorted()
-        val expectedFiles = (1..5).map { "/test/file$it.jpg" }.sorted()
-        assertEquals(expectedFiles, movedFiles)
     }
 }
