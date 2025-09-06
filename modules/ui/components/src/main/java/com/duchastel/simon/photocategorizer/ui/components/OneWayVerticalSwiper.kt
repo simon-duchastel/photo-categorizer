@@ -132,6 +132,9 @@ fun OneWayVerticalSwiper(
     }
 }
 
+/**
+ * State management for vertical swiper component.
+ */
 interface VerticalSwiperState {
     val pageCount: Int
     val currentPage: Int
