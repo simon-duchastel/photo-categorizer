@@ -20,6 +20,11 @@ import retrofit2.HttpException
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @Singleton
 internal class DropboxPhotoRepository @Inject constructor(
@@ -32,21 +37,22 @@ internal class DropboxPhotoRepository @Inject constructor(
         val completion: CompletableDeferred<Unit>
     )
 
-    private class RateLimiter(private val maxOperationsPerSecond: Int) {
-        private val intervalMs = 1000L / maxOperationsPerSecond
+    private class RateLimiter(maxOperationsPerSecond: Int) {
+        private val intervalMs = 1.seconds / maxOperationsPerSecond
         private val lastExecutionTime = AtomicLong(0)
 
+        @OptIn(ExperimentalTime::class)
         suspend fun acquire() {
-            val currentTime = System.currentTimeMillis()
-            val lastTime = lastExecutionTime.get()
+            val currentTime = Clock.System.now()
+            val lastTime = Instant.fromEpochMilliseconds(lastExecutionTime.get())
             val timeSinceLastExecution = currentTime - lastTime
             
             if (timeSinceLastExecution < intervalMs) {
                 val delayTime = intervalMs - timeSinceLastExecution
                 delay(delayTime)
             }
-            
-            lastExecutionTime.set(System.currentTimeMillis())
+
+            lastExecutionTime.set(Clock.System.now().toEpochMilliseconds())
         }
     }
 
@@ -66,6 +72,7 @@ internal class DropboxPhotoRepository @Inject constructor(
             processQueueContinuously()
         }
     }
+
     override suspend fun getPhotos(path: String): List<Photo> {
         if (!path.startsWith("/")) {
             throw IllegalArgumentException("Path must start with '/'")
@@ -131,22 +138,19 @@ internal class DropboxPhotoRepository @Inject constructor(
 
     private suspend fun processQueueContinuously() {
         val batchBuffer = mutableListOf<MovePhotoRequest>()
-        
+
         for (request in moveQueue) {
             batchBuffer.add(request)
-            
-            // Check if we should process as batch or individual
+
             if (batchBuffer.size >= BATCH_THRESHOLD) {
                 processBatch(batchBuffer.toList())
                 batchBuffer.clear()
             } else {
-                // Process individual request
-                val singleRequest = batchBuffer.removeFirst()
+                val singleRequest = batchBuffer.removeAt(0)
                 processSingleRequest(singleRequest)
-                
-                // Process remaining buffered requests individually
+
                 while (batchBuffer.isNotEmpty()) {
-                    val bufferedRequest = batchBuffer.removeFirst()
+                    val bufferedRequest = batchBuffer.removeAt(0)
                     processSingleRequest(bufferedRequest)
                 }
             }
@@ -168,8 +172,7 @@ internal class DropboxPhotoRepository @Inject constructor(
     }
 
     private suspend fun processBatch(requests: List<MovePhotoRequest>) {
-        // For batch processing, we can group multiple moves together
-        // For now, we'll process them sequentially with rate limiting
+        // For batch processing, we process them sequentially with rate limiting
         // This can be optimized later with actual batch API calls if available
         for (request in requests) {
             processSingleRequest(request)
@@ -191,7 +194,7 @@ internal class DropboxPhotoRepository @Inject constructor(
 
     private fun shouldRetry(exception: Exception): Boolean {
         return when (exception) {
-            is HttpException -> exception.code() == 429 // Too Many Requests
+            is HttpException -> exception.code() == 429
             else -> false
         }
     }
@@ -205,7 +208,7 @@ internal class DropboxPhotoRepository @Inject constructor(
         }
 
         try {
-            delay(RETRY_DELAY_MS * attempt) // Exponential backoff
+            delay((RETRY_DELAY_MS * attempt).milliseconds)
             rateLimiter.acquire()
             executeActualMove(request.originalPath, request.newPath)
             request.completion.complete(Unit)
