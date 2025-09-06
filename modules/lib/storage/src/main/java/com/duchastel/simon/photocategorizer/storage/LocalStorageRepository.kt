@@ -3,6 +3,9 @@ package com.duchastel.simon.photocategorizer.storage
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+/**
+ * Repository for local data storage and retrieval.
+ */
 interface LocalStorageRepository {
     fun getString(key: String): String?
 

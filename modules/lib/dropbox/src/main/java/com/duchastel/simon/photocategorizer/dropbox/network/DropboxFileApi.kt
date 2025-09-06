@@ -3,6 +3,9 @@ package com.duchastel.simon.photocategorizer.dropbox.network
 import retrofit2.http.Body
 import retrofit2.http.POST
 
+/**
+ * Retrofit API interface for Dropbox file operations.
+ */
 interface DropboxFileApi {
 
     @POST("files/list_folder")

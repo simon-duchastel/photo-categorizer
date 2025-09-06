@@ -5,6 +5,9 @@ import android.app.PendingIntent
 import android.content.Intent
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Repository interface for user authentication and session management.
+ */
 interface AuthRepository {
     /**
      * Returns true if the user is currently logged in, false otherwise.
@@ -45,6 +48,9 @@ interface AuthRepository {
     ): T
 }
 
+/**
+ * Token used for authenticated API requests.
+ */
 data class AuthToken(
     val accessToken: String
 )
