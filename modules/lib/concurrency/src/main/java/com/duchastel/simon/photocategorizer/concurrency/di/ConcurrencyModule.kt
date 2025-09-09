@@ -2,8 +2,8 @@ package com.duchastel.simon.photocategorizer.concurrency.di
 
 import com.duchastel.simon.photocategorizer.concurrency.RateLimiter
 import com.duchastel.simon.photocategorizer.concurrency.RateLimiterImpl
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -11,12 +11,10 @@ import kotlin.time.ExperimentalTime
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ConcurrencyModule {
+abstract class ConcurrencyModule {
 
     @OptIn(ExperimentalTime::class)
-    @Provides
+    @Binds
     @Singleton
-    fun provideRateLimiter(): RateLimiter {
-        return RateLimiterImpl()
-    }
+    abstract fun bindRateLimiter(rateLimiterImpl: RateLimiterImpl): RateLimiter
 }

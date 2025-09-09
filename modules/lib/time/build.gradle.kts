@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.duchastel.simon.photocategorizer.concurrency"
+    namespace = "com.duchastel.simon.photocategorizer.time"
     compileSdk = 35
 
     defaultConfig {
@@ -36,7 +36,6 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(project(":modules:lib:time"))
     
     implementation(libs.hilt)
     ksp(libs.hilt.compiler)
@@ -44,5 +43,4 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlin.test)
-    testImplementation(project(":modules:lib:time"))
 }

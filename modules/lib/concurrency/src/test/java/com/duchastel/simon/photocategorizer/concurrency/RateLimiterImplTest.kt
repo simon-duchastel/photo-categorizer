@@ -25,18 +25,9 @@ import kotlin.time.Instant
 @ExperimentalTime
 class RateLimiterImplTest {
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun createTestClock(scheduler: TestCoroutineScheduler): Clock {
-        return object : Clock {
-            override fun now(): Instant {
-                return Instant.fromEpochMilliseconds(scheduler.currentTime)
-            }
-        }
-    }
-
     @Test
     fun scheduleWorkShouldExecuteImmediatelyWhenNoOtherWorkIsScheduled() = runTest {
-        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
+        val rateLimiter = RateLimiterImpl(TestClock(testScheduler))
         var executed = false
 
         val result = rateLimiter.withRateLimit {
@@ -50,7 +41,7 @@ class RateLimiterImplTest {
 
     @Test
     fun scheduleWorkShouldReturnWorkResult() = runTest {
-        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
+        val rateLimiter = RateLimiterImpl(TestClock(testScheduler))
         val result = rateLimiter.withRateLimit {
             42
         }
@@ -60,7 +51,7 @@ class RateLimiterImplTest {
 
     @Test
     fun scheduleWorkShouldPropagateExceptions() = runTest {
-        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
+        val rateLimiter = RateLimiterImpl(TestClock(testScheduler))
         assertFailsWith<RuntimeException> {
             rateLimiter.withRateLimit {
                 throw RuntimeException("Test exception")
@@ -70,7 +61,7 @@ class RateLimiterImplTest {
 
     @Test
     fun concurrentScheduleWorkCallsShouldBeProcessedSequentially() = runTest {
-        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
+        val rateLimiter = RateLimiterImpl(TestClock(testScheduler))
         val executionOrder = mutableListOf<Int>()
 
         val job1 = async {
@@ -109,7 +100,7 @@ class RateLimiterImplTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun rateLimitingEnforcesMaxOperationsPerWindow() = runTest {
-        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
+        val rateLimiter = RateLimiterImpl(TestClock(testScheduler))
         val executionOrder = mutableListOf<String>()
 
         val job1 = launch {
@@ -194,7 +185,7 @@ class RateLimiterImplTest {
 
     @Test
     fun failedWorkShouldNotAffectSubsequentWork() = runTest {
-        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
+        val rateLimiter = RateLimiterImpl(TestClock(testScheduler))
         val results = mutableListOf<String>()
         
         // First work item succeeds
