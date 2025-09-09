@@ -3,8 +3,6 @@ package com.duchastel.simon.photocategorizer.screens.settings
 import androidx.lifecycle.ViewModel
 import com.duchastel.simon.photocategorizer.auth.AuthRepository
 import com.duchastel.simon.photocategorizer.storage.LocalStorageRepository
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,19 +18,16 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
 
-    @Mock
     private lateinit var authRepository: AuthRepository
-
-    @Mock
     private lateinit var localStorage: LocalStorageRepository
-
     private lateinit var viewModel: SettingsViewModel
 
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
-        MockitoAnnotations.openMocks(this).use { }
+        authRepository = mock<AuthRepository>()
+        localStorage = mock<LocalStorageRepository>()
         Dispatchers.setMain(testDispatcher)
         
         // Setup default mock behavior
