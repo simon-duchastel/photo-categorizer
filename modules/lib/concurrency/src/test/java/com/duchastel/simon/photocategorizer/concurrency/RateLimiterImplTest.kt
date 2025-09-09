@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -105,13 +106,13 @@ class RateLimiterImplTest {
         assertEquals(listOf(1, 2, 3), executionOrder)
     }
 
-    @Test 
-    fun rateLimitingWithTestClockWorksCorrectly() = runTest {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun rateLimitingEnforcesMaxOperationsPerWindow() = runTest {
         val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
         val executionOrder = mutableListOf<String>()
-        
-        // Use async operations to verify sequential processing with rate limiting
-        val job1 = async {
+
+        val job1 = launch {
             rateLimiter.withRateLimit {
                 executionOrder.add("work1-start")
                 delay(50) // Simulate work
@@ -119,37 +120,76 @@ class RateLimiterImplTest {
                 1
             }
         }
-        
-        val job2 = async {
+
+        val job2 = launch {
             rateLimiter.withRateLimit {
-                executionOrder.add("work2-start") 
+                executionOrder.add("work2-start")
                 delay(50) // Simulate work
                 executionOrder.add("work2-end")
                 2
             }
         }
-        
-        val job3 = async {
+
+        val job3 = launch {
             rateLimiter.withRateLimit {
                 executionOrder.add("work3-start")
                 delay(50) // Simulate work
-                executionOrder.add("work3-end") 
+                executionOrder.add("work3-end")
                 3
             }
         }
 
-        val results = listOf(job1.await(), job2.await(), job3.await())
-        
-        // Verify all work completed successfully
-        assertEquals(listOf(1, 2, 3), results.sorted())
-        
-        // Verify sequential execution pattern - all operations should be processed in order
-        // First job should complete entirely before second job starts, and so on
-        val expected = listOf("work1-start", "work1-end", "work2-start", "work2-end", "work3-start", "work3-end")
-        assertEquals(expected, executionOrder)
-        
-        // This test validates that the rate limiter enforces sequential execution
-        // using the test clock, which is the key behavior we want to verify
+        // Verify only one tasks started and then completed within the first window (< 1 second)
+        testScheduler.runCurrent()
+        assertEquals(listOf("work1-start"), executionOrder)
+        assertTrue(job1.isActive)
+        assertTrue(job2.isActive)
+        assertTrue(job3.isActive)
+
+        testScheduler.advanceTimeBy(50.milliseconds)
+        testScheduler.runCurrent()
+        assertEquals(listOf("work1-start", "work1-end"), executionOrder)
+        assertTrue(job1.isCompleted)
+        assertTrue(job2.isActive)
+        assertTrue(job3.isActive)
+
+        // Verify second task started once we enter the next 1 second window
+        testScheduler.advanceTimeBy(1.seconds)
+        testScheduler.runCurrent()
+        assertContains(executionOrder, "work2-start")
+        assertTrue(job2.isActive)
+        assertTrue(job3.isActive)
+
+        // Verify second task complete
+        testScheduler.advanceTimeBy(50.milliseconds)
+        testScheduler.runCurrent()
+        assertEquals(
+            expected = listOf(
+                "work1-start",
+                "work1-end",
+                "work2-start",
+                "work2-end",
+            ),
+            actual = executionOrder,
+        )
+        assertTrue(job2.isCompleted)
+        assertTrue(job3.isActive)
+
+        // Verify third task started and completed in third window
+        testScheduler.advanceTimeBy(1.seconds + 50.milliseconds)
+        testScheduler.runCurrent()
+        assertEquals(
+            expected = listOf(
+                "work1-start",
+                "work1-end",
+                "work2-start",
+                "work2-end",
+                "work3-start",
+                "work3-end",
+            ),
+            actual = executionOrder,
+        )
+        assertTrue(job3.isCompleted)
     }
 
     @Test

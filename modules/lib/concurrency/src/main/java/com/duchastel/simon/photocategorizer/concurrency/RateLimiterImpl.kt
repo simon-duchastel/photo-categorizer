@@ -40,22 +40,18 @@ class RateLimiterImpl @Inject internal constructor(
         val completion = CompletableDeferred<T>()
         val workItem = WorkItem(work, completion)
 
-        val isFirst = mutex.withLock {
-            val wasEmpty = workQueue.isEmpty()
+        mutex.withLock {
             workQueue.add(workItem)
 
-            if (wasEmpty) {
+            if (workQueue.size == 1) {
                 workItem.readyToExecute.complete(Unit)
             }
-            wasEmpty
         }
 
         workItem.readyToExecute.await()
 
         try {
-            if (!isFirst) {
-                enforceRateLimit()
-            }
+            enforceRateLimit()
 
             val result = work()
             recordCompletion()
@@ -82,16 +78,31 @@ class RateLimiterImpl @Inject internal constructor(
     private suspend fun enforceRateLimit() {
         val delayTime = mutex.withLock {
             val now = clock.now()
-            completionTimes.removeAll { it < now - RATE_LIMIT_WINDOW }
+            completionTimes.apply {
+                removeAll { it < now - RATE_LIMIT_WINDOW }
+                sort()
+            }
 
             // If we're at the rate limit, calculate how long to wait
             if (completionTimes.size >= MAX_OPERATIONS_PER_WINDOW) {
-                val oldestInWindow = completionTimes.minOrNull()
-                if (oldestInWindow != null) {
-                    val timeUntilCanProceed = (oldestInWindow + RATE_LIMIT_WINDOW) - now
-                    if (timeUntilCanProceed.isPositive()) {
-                        timeUntilCanProceed
-                    } else null
+                // since the list is sorted, we know element #MAX_OPERATIONS_PER_WINDOW
+                // is the oldest current time allowed in the new window
+                //
+                // ex. if the window size is 1s, the max operations per window is 3, and the
+                // current operations are [0.5, 0.7, 0.9] then the operations at 0.7s and 0.9s are
+                // allowed in the new window and the one at 0.5s isn't - leaving 2 existing
+                // operations plus the next operation being scheduled in the new window for 3 total
+                // operations.
+                //
+                // In this example, we need to wait 1s past the 0.5s operation to get to the point
+                // where only the 0.7s and 0.9s operations remain, meaning we need to get to at
+                // least time 1.5s before starting any new operations
+                val allowedCarryoverOperations = MAX_OPERATIONS_PER_WINDOW - 1 // leave one for the new operation
+                val lastAllowedOperationIndex = completionTimes.lastIndex - allowedCarryoverOperations
+                val oldestAllowedInNewWindow = completionTimes[lastAllowedOperationIndex]
+                val timeUntilCanProceed = (oldestAllowedInNewWindow + RATE_LIMIT_WINDOW) - now
+                if (timeUntilCanProceed.isPositive()) {
+                    timeUntilCanProceed
                 } else null
             } else null
         }
@@ -102,8 +113,10 @@ class RateLimiterImpl @Inject internal constructor(
     private suspend fun recordCompletion() {
         val now = clock.now()
         mutex.withLock {
-            completionTimes.add(now)
-            completionTimes.removeAll { it < now - RATE_LIMIT_WINDOW }
+            completionTimes.apply {
+                add(now)
+                removeAll { it < now - RATE_LIMIT_WINDOW }
+            }
         }
     }
 }
