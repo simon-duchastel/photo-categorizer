@@ -37,6 +37,9 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     
+    // TestClock depends on coroutines test, so we need it in main implementation
+    implementation(libs.kotlinx.coroutines.test)
+    
     implementation(libs.hilt)
     ksp(libs.hilt.compiler)
 
