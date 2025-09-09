@@ -34,7 +34,7 @@ class DropboxPhotoRepositoryTest {
 
     @Before
     fun setup() {
-        MockitoAnnotations.openMocks(this)
+        MockitoAnnotations.openMocks(this).use { }
         repository = DropboxPhotoRepository(mockNetworkApi)
     }
 

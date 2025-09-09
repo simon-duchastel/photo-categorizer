@@ -32,7 +32,7 @@ class SettingsViewModelTest {
 
     @Before
     fun setUp() {
-        MockitoAnnotations.openMocks(this)
+        MockitoAnnotations.openMocks(this).use { }
         Dispatchers.setMain(testDispatcher)
         
         // Setup default mock behavior
