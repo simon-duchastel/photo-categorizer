@@ -105,7 +105,15 @@ class SettingsViewModel @Inject constructor(
 
             try {
                 localStorage.put(SETTINGS_KEY, userSettings)
-            } finally {
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                        showSuccessMessage = true,
+                    )
+                }
+            } catch (_: Exception) {
+                // TODO - abstract local storage to not throw errors
+                // For now we swallow the error
                 _state.update {
                     it.copy(
                         isSaving = false,
