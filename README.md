@@ -13,10 +13,12 @@ photo-categorizer/
     ├── app/                        # Main application module
     ├── lib/                        # Library modules for core functionality  
     │   ├── auth/                   # Authentication system
+    │   ├── concurrency/            # Rate limiting and concurrency utilities
     │   ├── dropbox/                # Dropbox integration
     │   ├── filemanager/            # Abstract file management interface
     │   ├── navigation/             # Navigation utilities
     │   ├── storage/                # Local storage management
+    │   ├── time/                   # Clock and time utilities, including DI for System Clock
     │   └── utils/                  # Shared utility functions
     └── ui/                         # User interface modules
         ├── components/             # Reusable UI components

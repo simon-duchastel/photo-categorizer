@@ -1,6 +1,5 @@
 package com.duchastel.simon.photocategorizer.screens.settings
 
-import androidx.lifecycle.ViewModel
 import com.duchastel.simon.photocategorizer.auth.AuthRepository
 import com.duchastel.simon.photocategorizer.storage.LocalStorageRepository
 import org.mockito.kotlin.*
@@ -29,7 +28,7 @@ class SettingsViewModelTest {
         authRepository = mock<AuthRepository>()
         localStorage = mock<LocalStorageRepository>()
         Dispatchers.setMain(testDispatcher)
-        
+
         // Setup default mock behavior
         whenever(localStorage.getString(any())).thenReturn(null)
         doNothing().whenever(authRepository).logout()
@@ -40,9 +39,9 @@ class SettingsViewModelTest {
     @Test
     fun `initial state should have default settings and loading false`() = runTest {
         advanceUntilIdle()
-        
+
         val state = viewModel.state.first()
-        
+
         assertEquals(UserSettings.DEFAULT, state.userSettings)
         assertFalse(state.isLoading)
         assertFalse(state.isSaving)
@@ -61,13 +60,12 @@ class SettingsViewModelTest {
             destinationFolderPath = "/custom/destination",
             archiveFolderPath = "/custom/archive"
         )
-        
         whenever(localStorage.getString("user_settings")).thenReturn(
             """{"backendType":"DROPBOX","cameraRollPath":"/custom/camera","destinationFolderPath":"/custom/destination","archiveFolderPath":"/custom/archive"}""")
         
         viewModel = SettingsViewModel(authRepository, localStorage)
         advanceUntilIdle()
-        
+
         val state = viewModel.state.first()
         assertEquals(savedSettings, state.userSettings)
     }
@@ -75,9 +73,9 @@ class SettingsViewModelTest {
     @Test
     fun `onBackendTypeChanged should update backend type`() = runTest {
         advanceUntilIdle()
-        
+
         viewModel.onBackendTypeChanged(BackendType.DROPBOX)
-        
+
         val state = viewModel.state.first()
         assertEquals(BackendType.DROPBOX, state.userSettings.backendType)
     }
@@ -85,10 +83,10 @@ class SettingsViewModelTest {
     @Test
     fun `onCameraRollPathChanged should update path and clear error`() = runTest {
         advanceUntilIdle()
-        
+
         val newPath = "/new/camera/path"
         viewModel.onCameraRollPathChanged(newPath)
-        
+
         val state = viewModel.state.first()
         assertEquals(newPath, state.userSettings.cameraRollPath)
         assertNull(state.cameraRollPathError)
@@ -97,10 +95,10 @@ class SettingsViewModelTest {
     @Test
     fun `onDestinationFolderPathChanged should update path and clear error`() = runTest {
         advanceUntilIdle()
-        
+
         val newPath = "/new/destination/path"
         viewModel.onDestinationFolderPathChanged(newPath)
-        
+
         val state = viewModel.state.first()
         assertEquals(newPath, state.userSettings.destinationFolderPath)
         assertNull(state.destinationFolderPathError)
@@ -109,10 +107,10 @@ class SettingsViewModelTest {
     @Test
     fun `onArchiveFolderPathChanged should update path and clear error`() = runTest {
         advanceUntilIdle()
-        
+
         val newPath = "/new/archive/path"
         viewModel.onArchiveFolderPathChanged(newPath)
-        
+
         val state = viewModel.state.first()
         assertEquals(newPath, state.userSettings.archiveFolderPath)
         assertNull(state.archiveFolderPathError)
@@ -121,16 +119,16 @@ class SettingsViewModelTest {
     @Test
     fun `onSaveClicked with valid settings should save successfully`() = runTest {
         advanceUntilIdle()
-        
+
         // Set valid settings
         viewModel.onCameraRollPathChanged("/valid/camera")
         viewModel.onDestinationFolderPathChanged("/valid/destination")
         viewModel.onArchiveFolderPathChanged("/valid/archive")
         advanceUntilIdle()
-        
+
         viewModel.onSaveClicked()
-        advanceUntilIdle()
-        
+        advanceUntilIdle() 
+
         verify(localStorage).putString(eq("user_settings"), any())
         
         val state = viewModel.state.first()
@@ -140,15 +138,15 @@ class SettingsViewModelTest {
     @Test
     fun `onSaveClicked with empty camera roll path should show validation error`() = runTest {
         advanceUntilIdle()
-        
+
         // Set empty camera roll path
         viewModel.onCameraRollPathChanged("")
         viewModel.onDestinationFolderPathChanged("/valid/destination")
         viewModel.onArchiveFolderPathChanged("/valid/archive")
         advanceUntilIdle()
-        
+
         viewModel.onSaveClicked()
-        
+
         val state = viewModel.state.first()
         assertEquals("Camera roll path is required", state.cameraRollPathError)
     }
@@ -156,15 +154,15 @@ class SettingsViewModelTest {
     @Test
     fun `onSaveClicked with empty destination folder path should show validation error`() = runTest {
         advanceUntilIdle()
-        
+
         // Set empty destination folder path
         viewModel.onCameraRollPathChanged("/valid/camera")
         viewModel.onDestinationFolderPathChanged("")
         viewModel.onArchiveFolderPathChanged("/valid/archive")
         advanceUntilIdle()
-        
+
         viewModel.onSaveClicked()
-        
+
         val state = viewModel.state.first()
         assertEquals("Destination folder path is required", state.destinationFolderPathError)
     }
@@ -172,15 +170,15 @@ class SettingsViewModelTest {
     @Test
     fun `onSaveClicked with empty archive folder path should show validation error`() = runTest {
         advanceUntilIdle()
-        
+
         // Set empty archive folder path
         viewModel.onCameraRollPathChanged("/valid/camera")
         viewModel.onDestinationFolderPathChanged("/valid/destination")
         viewModel.onArchiveFolderPathChanged("")
         advanceUntilIdle()
-        
+
         viewModel.onSaveClicked()
-        
+
         val state = viewModel.state.first()
         assertEquals("Archive folder path is required", state.archiveFolderPathError)
     }
@@ -188,13 +186,13 @@ class SettingsViewModelTest {
     @Test
     fun `onResetToDefaultsClicked should reset to default settings`() = runTest {
         advanceUntilIdle()
-        
+
         // Change settings first
         viewModel.onCameraRollPathChanged("/custom/camera")
         advanceUntilIdle()
-        
+
         viewModel.onResetToDefaultsClicked()
-        
+
         val state = viewModel.state.first()
         assertEquals(UserSettings.DEFAULT, state.userSettings)
     }
@@ -216,9 +214,9 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         viewModel.onSaveClicked()
         advanceUntilIdle()
-        
+
         viewModel.onSuccessMessageShown()
-        
+
         val state = viewModel.state.first()
         assertFalse(state.showSuccessMessage)
     }
@@ -232,10 +230,10 @@ class SettingsViewModelTest {
         viewModel.onDestinationFolderPathChanged("/valid/destination")
         viewModel.onArchiveFolderPathChanged("/valid/archive")
         advanceUntilIdle()
-        
+
         viewModel.onSaveClicked()
         advanceUntilIdle()
-        
+
         val state = viewModel.state.first()
         assertTrue(state.showErrorMessage)
         assertFalse(state.isSaving)
@@ -244,7 +242,7 @@ class SettingsViewModelTest {
     @Test
     fun `UserSettings default values should match expected defaults`() {
         val defaultSettings = UserSettings.DEFAULT
-        
+
         assertEquals(BackendType.DROPBOX, defaultSettings.backendType)
         assertEquals("/camera test/camera roll", defaultSettings.cameraRollPath)
         assertEquals("/camera test/first event", defaultSettings.destinationFolderPath)

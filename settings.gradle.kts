@@ -29,6 +29,7 @@ include(":modules:lib:filemanager")
 include(":modules:lib:dropbox")
 include(":modules:lib:storage")
 include(":modules:lib:navigation")
+include(":modules:lib:time")
 include(":modules:lib:utils")
 
 // UI modules
