@@ -1,5 +1,6 @@
 package com.duchastel.simon.photocategorizer.dropbox.files
 
+import com.duchastel.simon.photocategorizer.concurrency.RateLimiter
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
 import com.duchastel.simon.photocategorizer.dropbox.network.FileTag
 import com.duchastel.simon.photocategorizer.dropbox.network.ListFolderContinueRequest
@@ -9,13 +10,23 @@ import com.duchastel.simon.photocategorizer.dropbox.network.TemporaryLinkRequest
 import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import com.duchastel.simon.photocategorizer.filemanager.Photo
 import com.duchastel.simon.photocategorizer.filemanager.SUPPORTED_FILE_EXTENSIONS
+import kotlinx.coroutines.delay
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
 internal class DropboxPhotoRepository @Inject constructor(
     private val networkApi: DropboxFileApi,
+    private val rateLimiter: RateLimiter,
 ): PhotoRepository {
+
+    companion object {
+        private const val MAX_RETRY_ATTEMPTS = 3
+        private const val RETRY_DELAY_MS = 2000L
+    }
+
     override suspend fun getPhotos(path: String): List<Photo> {
         if (!path.startsWith("/")) {
             throw IllegalArgumentException("Path must start with '/'")
@@ -70,15 +81,41 @@ internal class DropboxPhotoRepository @Inject constructor(
             throw IllegalArgumentException("Path must start with '/'")
         }
 
+        rateLimiter.withRateLimit {
+            movePhotoWithRetry(originalPath, newPath)
+        }
+    }
+
+    private suspend fun movePhotoWithRetry(originalPath: String, newPath: String, attempt: Int = 1) {
+        try {
+            executeActualMove(originalPath, newPath)
+        } catch (e: Exception) {
+            if (shouldRetry(e) && attempt <= MAX_RETRY_ATTEMPTS) {
+                delay((RETRY_DELAY_MS * attempt).milliseconds)
+                movePhotoWithRetry(originalPath, newPath, attempt + 1)
+            } else {
+                throw e
+            }
+        }
+    }
+
+    private suspend fun executeActualMove(originalPath: String, newPath: String) {
         val response = networkApi.moveFile(MoveFileRequest(from = originalPath, to = newPath))
         if (response.error != null) {
             val errorMessage = buildString {
-                 append(response.error)
+                append(response.error)
                 if (response.errorSummary != null) {
                     append(": ${response.errorSummary}")
                 }
             }
             throw IllegalArgumentException(errorMessage)
+        }
+    }
+
+    private fun shouldRetry(exception: Exception): Boolean {
+        return when (exception) {
+            is HttpException -> exception.code() == 429
+            else -> false
         }
     }
 }

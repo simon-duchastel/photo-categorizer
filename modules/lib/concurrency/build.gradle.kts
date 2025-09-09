@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.duchastel.simon.photocategorizer.dropbox"
+    namespace = "com.duchastel.simon.photocategorizer.concurrency"
     compileSdk = 35
 
     defaultConfig {
@@ -35,34 +35,12 @@ android {
 }
 
 dependencies {
-    implementation(project(":modules:lib:auth"))
-    implementation(project(":modules:lib:concurrency"))
-    implementation(project(":modules:lib:filemanager"))
-
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-
-    implementation(libs.openid.appauth)
-
+    
     implementation(libs.hilt)
     ksp(libs.hilt.compiler)
-
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.moshi)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging)
-    implementation(libs.moshi)
-    ksp(libs.moshi.codegen)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.kotlin.test)
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.kotlin)
-    testImplementation(libs.kotlinx.coroutines.test.v173)
-    testImplementation(libs.kotlin.test.v1920)
-
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

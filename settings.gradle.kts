@@ -24,6 +24,7 @@ include(":modules:app")
 
 // Business logic modules
 include(":modules:lib:auth")
+include(":modules:lib:concurrency")
 include(":modules:lib:filemanager")
 include(":modules:lib:dropbox")
 include(":modules:lib:storage")
