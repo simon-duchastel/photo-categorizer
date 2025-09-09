@@ -18,7 +18,7 @@ import kotlin.time.Instant
  */
 @OptIn(ExperimentalTime::class)
 class RateLimiterImpl @Inject internal constructor(
-    private val clock: Clock = Clock.System,
+    private val clock: Clock,
 ) : RateLimiter {
 
     companion object {
