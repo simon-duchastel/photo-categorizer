@@ -162,23 +162,40 @@ class SettingsViewModel @Inject constructor(
 
 @Serializable
 data class UserSettings(
-    val backendType: BackendType = BackendType.DROPBOX,
-    val cameraRollPath: String = "/camera test/camera roll",
-    val destinationFolderPath: String = "/camera test/first event",
-    val archiveFolderPath: String = "/camera test/camera roll archive",
+    val backendType: BackendType,
+    val cameraRollPath: String,
+    val destinationFolderPath: String,
+    val archiveFolderPath: String,
 ) {
     companion object {
-        val DEFAULT = UserSettings()
+        val DEFAULT = UserSettings(
+            backendType = BackendType.DROPBOX,
+            cameraRollPath = "/camera test/camera roll",
+            destinationFolderPath = "/camera test/first event",
+            archiveFolderPath = "/camera test/camera roll archive",
+        )
     }
 }
 
+/**
+ * Validation field identifiers for settings form validation.
+ * Used as type-safe keys for validation error mapping.
+ */
 enum class ValidationField {
+    /** Camera roll path validation field */
     CAMERA_ROLL_PATH,
+    /** Destination folder path validation field */
     DESTINATION_FOLDER_PATH,
+    /** Archive folder path validation field */
     ARCHIVE_FOLDER_PATH
 }
 
+/**
+ * Available cloud storage backend types for photo management.
+ * Each backend provides its own authentication and file operations.
+ */
 @Serializable
 enum class BackendType(val displayName: String) {
+    /** Dropbox cloud storage backend */
     DROPBOX("Dropbox")
 }

@@ -32,11 +32,20 @@ Comprehensive app configuration and user preferences management for the Photo Ca
 ```kotlin
 @Serializable
 data class UserSettings(
-    val backendType: BackendType = BackendType.DROPBOX,
-    val cameraRollPath: String = "/camera test/camera roll",
-    val destinationFolderPath: String = "/camera test/first event", 
-    val archiveFolderPath: String = "/camera test/camera roll archive"
-)
+    val backendType: BackendType,
+    val cameraRollPath: String,
+    val destinationFolderPath: String,
+    val archiveFolderPath: String,
+) {
+    companion object {
+        val DEFAULT = UserSettings(
+            backendType = BackendType.DROPBOX,
+            cameraRollPath = "/camera test/camera roll",
+            destinationFolderPath = "/camera test/first event",
+            archiveFolderPath = "/camera test/camera roll archive",
+        )
+    }
+}
 ```
 
 ### State Management
@@ -59,16 +68,6 @@ The `SettingsViewModel.State` includes:
 - Real-time error clearing on user input
 - Comprehensive error message display
 - Form submission prevention when validation fails
-
-### Testing
-- **Comprehensive Unit Tests**: 15+ test cases covering:
-  - Settings loading and saving functionality
-  - Form validation logic
-  - State management operations
-  - Error handling scenarios
-  - Default values and reset operations
-- **Mocked Dependencies**: `AuthRepository` and `LocalStorageRepository` mocked for isolation
-- **Coroutine Testing**: Proper async testing with `TestDispatcher`
 
 ## Usage
 
