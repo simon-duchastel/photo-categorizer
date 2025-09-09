@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,18 +44,6 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
-
-    LaunchedEffect(state.showSuccessMessage) {
-        if (state.showSuccessMessage) {
-            viewModel.onSuccessMessageShown()
-        }
-    }
-
-    LaunchedEffect(state.showErrorMessage) {
-        if (state.showErrorMessage) {
-            viewModel.onErrorMessageShown()
-        }
-    }
 
     SettingsContent(
         state = state,
@@ -64,7 +53,9 @@ fun SettingsScreen(
         onArchiveFolderPathChanged = viewModel::onArchiveFolderPathChanged,
         onSaveClicked = viewModel::onSaveClicked,
         onResetToDefaultsClicked = viewModel::onResetToDefaultsClicked,
-        onLogoutClicked = viewModel::onLogoutClicked
+        onLogoutClicked = viewModel::onLogoutClicked,
+        onSuccessMessageShown = viewModel::onSuccessMessageShown,
+        onErrorMessageShown = viewModel::onErrorMessageShown
     )
 }
 
@@ -79,6 +70,8 @@ private fun SettingsContent(
     onSaveClicked: () -> Unit,
     onResetToDefaultsClicked: () -> Unit,
     onLogoutClicked: () -> Unit,
+    onSuccessMessageShown: () -> Unit,
+    onErrorMessageShown: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -285,6 +278,11 @@ private fun SettingsContent(
 
         // Success/Error Messages
         if (state.showSuccessMessage) {
+            LaunchedEffect(state.showSuccessMessage) {
+                delay(3000) // Show snackbar for 3 seconds
+                onSuccessMessageShown()
+            }
+            
             Snackbar(
                 modifier = Modifier.padding(top = 16.dp)
             ) {
@@ -293,6 +291,11 @@ private fun SettingsContent(
         }
 
         if (state.showErrorMessage) {
+            LaunchedEffect(state.showErrorMessage) {
+                delay(3000) // Show snackbar for 3 seconds
+                onErrorMessageShown()
+            }
+            
             Snackbar(
                 modifier = Modifier.padding(top = 16.dp)
             ) {

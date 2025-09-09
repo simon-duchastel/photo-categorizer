@@ -21,7 +21,18 @@ class SettingsViewModel @Inject constructor(
     private val localStorage: LocalStorageRepository,
 ) : ViewModel() {
 
-    private val _state: MutableStateFlow<State> = MutableStateFlow(State())
+    private val _state: MutableStateFlow<State> = MutableStateFlow(
+        State(
+            userSettings = UserSettings.DEFAULT,
+            isLoading = true,
+            isSaving = false,
+            showSuccessMessage = false,
+            showErrorMessage = false,
+            cameraRollPathError = null,
+            destinationFolderPathError = null,
+            archiveFolderPathError = null,
+        )
+    )
     val state: StateFlow<State> = _state
 
     init {
@@ -61,9 +72,9 @@ class SettingsViewModel @Inject constructor(
             saveSettings(currentState.userSettings)
         } else {
             _state.update { currentState.copy(
-                cameraRollPathError = validationErrors["cameraRollPath"],
-                destinationFolderPathError = validationErrors["destinationFolderPath"],
-                archiveFolderPathError = validationErrors["archiveFolderPath"]
+                cameraRollPathError = validationErrors[ValidationField.CAMERA_ROLL_PATH],
+                destinationFolderPathError = validationErrors[ValidationField.DESTINATION_FOLDER_PATH],
+                archiveFolderPathError = validationErrors[ValidationField.ARCHIVE_FOLDER_PATH]
             ) }
         }
     }
@@ -107,19 +118,19 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun validateSettings(settings: UserSettings): Map<String, String> {
-        val errors = mutableMapOf<String, String>()
+    private fun validateSettings(settings: UserSettings): Map<ValidationField, String> {
+        val errors = mutableMapOf<ValidationField, String>()
         
         if (settings.cameraRollPath.isBlank()) {
-            errors["cameraRollPath"] = "Camera roll path is required"
+            errors[ValidationField.CAMERA_ROLL_PATH] = "Camera roll path is required"
         }
         
         if (settings.destinationFolderPath.isBlank()) {
-            errors["destinationFolderPath"] = "Destination folder path is required"
+            errors[ValidationField.DESTINATION_FOLDER_PATH] = "Destination folder path is required"
         }
         
         if (settings.archiveFolderPath.isBlank()) {
-            errors["archiveFolderPath"] = "Archive folder path is required"
+            errors[ValidationField.ARCHIVE_FOLDER_PATH] = "Archive folder path is required"
         }
         
         return errors
@@ -134,14 +145,14 @@ class SettingsViewModel @Inject constructor(
     }
 
     data class State(
-        val userSettings: UserSettings = UserSettings.DEFAULT,
-        val isLoading: Boolean = true,
-        val isSaving: Boolean = false,
-        val showSuccessMessage: Boolean = false,
-        val showErrorMessage: Boolean = false,
-        val cameraRollPathError: String? = null,
-        val destinationFolderPathError: String? = null,
-        val archiveFolderPathError: String? = null,
+        val userSettings: UserSettings,
+        val isLoading: Boolean,
+        val isSaving: Boolean,
+        val showSuccessMessage: Boolean,
+        val showErrorMessage: Boolean,
+        val cameraRollPathError: String?,
+        val destinationFolderPathError: String?,
+        val archiveFolderPathError: String?,
     )
 
     companion object {
@@ -159,6 +170,12 @@ data class UserSettings(
     companion object {
         val DEFAULT = UserSettings()
     }
+}
+
+enum class ValidationField {
+    CAMERA_ROLL_PATH,
+    DESTINATION_FOLDER_PATH,
+    ARCHIVE_FOLDER_PATH
 }
 
 @Serializable
