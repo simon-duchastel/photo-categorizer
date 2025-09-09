@@ -32,7 +32,7 @@ class SettingsViewModelTest {
         
         // Setup default mock behavior
         whenever(localStorage.getString(any())).thenReturn(null)
-        whenever(authRepository.logout()).thenReturn(Unit)
+        doNothing().whenever(authRepository).logout()
         
         viewModel = SettingsViewModel(authRepository, localStorage)
     }
@@ -225,7 +225,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `save failure should show error message`() = runTest {
-        whenever(localStorage.putString(any(), any())).thenThrow(RuntimeException("Save failed"))
+        doThrow(RuntimeException("Save failed")).whenever(localStorage).putString(any(), any())
         
         advanceUntilIdle()
         viewModel.onCameraRollPathChanged("/valid/camera")
