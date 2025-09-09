@@ -7,10 +7,12 @@ Core business logic and data management modules providing foundational functiona
 ```
 lib/
 ├── auth/                           # Authentication system and token management
+├── concurrency/                    # Rate limiting and concurrency utilities
 ├── dropbox/                        # Dropbox API integration and file operations  
 ├── filemanager/                    # Abstract file management interface
 ├── navigation/                     # Navigation utilities and routing
 ├── storage/                        # Local storage and data persistence
+├── time/                           # Clock and time utilities, including DI for System Clock
 └── utils/                          # Shared utility functions and extensions
 ```
 
