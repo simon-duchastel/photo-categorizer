@@ -3,12 +3,7 @@ package com.duchastel.simon.photocategorizer.screens.settings
 import androidx.lifecycle.ViewModel
 import com.duchastel.simon.photocategorizer.auth.AuthRepository
 import com.duchastel.simon.photocategorizer.storage.LocalStorageRepository
-import io.mockk.MockKAnnotations
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.just
-import io.mockk.runs
-import io.mockk.verify
+import org.mockito.kotlin.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -23,25 +18,21 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
 
-    @MockK
     private lateinit var authRepository: AuthRepository
-
-    @MockK
     private lateinit var localStorage: LocalStorageRepository
-
     private lateinit var viewModel: SettingsViewModel
 
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
-        MockKAnnotations.init(this)
+        authRepository = mock<AuthRepository>()
+        localStorage = mock<LocalStorageRepository>()
         Dispatchers.setMain(testDispatcher)
         
         // Setup default mock behavior
-        every { localStorage.getString(any()) } returns null
-        every { localStorage.putString(any(), any()) } just runs
-        every { authRepository.logout() } just runs
+        whenever(localStorage.getString(any())).thenReturn(null)
+        doNothing().whenever(authRepository).logout()
         
         viewModel = SettingsViewModel(authRepository, localStorage)
     }
@@ -71,8 +62,8 @@ class SettingsViewModelTest {
             archiveFolderPath = "/custom/archive"
         )
         
-        every { localStorage.getString("user_settings") } returns 
-            """{"backendType":"DROPBOX","cameraRollPath":"/custom/camera","destinationFolderPath":"/custom/destination","archiveFolderPath":"/custom/archive"}"""
+        whenever(localStorage.getString("user_settings")).thenReturn(
+            """{"backendType":"DROPBOX","cameraRollPath":"/custom/camera","destinationFolderPath":"/custom/destination","archiveFolderPath":"/custom/archive"}""")
         
         viewModel = SettingsViewModel(authRepository, localStorage)
         advanceUntilIdle()
@@ -140,7 +131,7 @@ class SettingsViewModelTest {
         viewModel.onSaveClicked()
         advanceUntilIdle()
         
-        verify { localStorage.putString("user_settings", any()) }
+        verify(localStorage).putString(eq("user_settings"), any())
         
         val state = viewModel.state.first()
         assertTrue(state.showSuccessMessage)
@@ -212,7 +203,7 @@ class SettingsViewModelTest {
     fun `onLogoutClicked should call auth repository logout`() = runTest {
         viewModel.onLogoutClicked()
         
-        verify { authRepository.logout() }
+        verify(authRepository).logout()
     }
 
     @Test
@@ -234,7 +225,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `save failure should show error message`() = runTest {
-        every { localStorage.putString(any(), any()) } throws RuntimeException("Save failed")
+        doThrow(RuntimeException("Save failed")).whenever(localStorage).putString(any(), any())
         
         advanceUntilIdle()
         viewModel.onCameraRollPathChanged("/valid/camera")
