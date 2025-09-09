@@ -3,9 +3,14 @@ package com.duchastel.simon.photocategorizer.concurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -13,13 +18,14 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.TestTimeSource
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 
 @ExperimentalTime
 class RateLimiterImplTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun createTestClock(scheduler: kotlinx.coroutines.test.TestCoroutineScheduler): Clock {
+    private fun createTestClock(scheduler: TestCoroutineScheduler): Clock {
         return object : Clock {
             override fun now(): Instant {
                 return Instant.fromEpochMilliseconds(scheduler.currentTime)
@@ -28,11 +34,11 @@ class RateLimiterImplTest {
     }
 
     @Test
-    fun `scheduleWork should execute immediately when no other work is scheduled`() = runTest {
-        val scheduler = RateLimiterImpl(createTestClock(testScheduler))
+    fun scheduleWorkShouldExecuteImmediatelyWhenNoOtherWorkIsScheduled() = runTest {
+        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
         var executed = false
-        
-        val result = scheduler.withRateLimit {
+
+        val result = rateLimiter.withRateLimit {
             executed = true
             "result"
         }
@@ -42,9 +48,9 @@ class RateLimiterImplTest {
     }
 
     @Test
-    fun `scheduleWork should return work result`() = runTest {
-        val scheduler = RateLimiterImpl(createTestClock(testScheduler))
-        val result = scheduler.withRateLimit {
+    fun scheduleWorkShouldReturnWorkResult() = runTest {
+        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
+        val result = rateLimiter.withRateLimit {
             42
         }
         
@@ -52,22 +58,22 @@ class RateLimiterImplTest {
     }
 
     @Test
-    fun `scheduleWork should propagate exceptions`() = runTest {
-        val scheduler = RateLimiterImpl(createTestClock(testScheduler))
+    fun scheduleWorkShouldPropagateExceptions() = runTest {
+        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
         assertFailsWith<RuntimeException> {
-            scheduler.withRateLimit {
+            rateLimiter.withRateLimit {
                 throw RuntimeException("Test exception")
             }
         }
     }
 
     @Test
-    fun `concurrent scheduleWork calls should be processed sequentially`() = runTest {
-        val scheduler = RateLimiterImpl(createTestClock(testScheduler))
+    fun concurrentScheduleWorkCallsShouldBeProcessedSequentially() = runTest {
+        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
         val executionOrder = mutableListOf<Int>()
-        
-        val job1 = async { 
-            scheduler.withRateLimit {
+
+        val job1 = async {
+            rateLimiter.withRateLimit {
                 delay(10) // Simulate some work
                 executionOrder.add(1)
                 1
@@ -75,7 +81,7 @@ class RateLimiterImplTest {
         }
         
         val job2 = async {
-            scheduler.withRateLimit {
+            rateLimiter.withRateLimit {
                 delay(10) // Simulate some work
                 executionOrder.add(2)
                 2
@@ -83,7 +89,7 @@ class RateLimiterImplTest {
         }
         
         val job3 = async {
-            scheduler.withRateLimit {
+            rateLimiter.withRateLimit {
                 delay(10) // Simulate some work
                 executionOrder.add(3)
                 3
@@ -99,61 +105,89 @@ class RateLimiterImplTest {
         assertEquals(listOf(1, 2, 3), executionOrder)
     }
 
-    @Test 
-    fun `rate limiting with test clock works correctly`() = runTest {
-        val scheduler = RateLimiterImpl(createTestClock(testScheduler))
+    @Test
+    fun rateLimitingEnforcesMaxOperationsPerWindow() = runTest {
+        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
         val executionOrder = mutableListOf<String>()
-        
-        // Use async operations to verify sequential processing with rate limiting
-        val job1 = async {
-            scheduler.withRateLimit {
+
+        val job1 = launch {
+            rateLimiter.withRateLimit {
                 executionOrder.add("work1-start")
                 delay(50) // Simulate work
                 executionOrder.add("work1-end")
                 1
             }
         }
-        
-        val job2 = async {
-            scheduler.withRateLimit {
-                executionOrder.add("work2-start") 
+
+        val job2 = launch {
+            rateLimiter.withRateLimit {
+                executionOrder.add("work2-start")
                 delay(50) // Simulate work
                 executionOrder.add("work2-end")
                 2
             }
         }
-        
-        val job3 = async {
-            scheduler.withRateLimit {
+
+        val job3 = launch {
+            rateLimiter.withRateLimit {
                 executionOrder.add("work3-start")
                 delay(50) // Simulate work
-                executionOrder.add("work3-end") 
+                executionOrder.add("work3-end")
                 3
             }
         }
 
-        val results = listOf(job1.await(), job2.await(), job3.await())
-        
-        // Verify all work completed successfully
-        assertEquals(listOf(1, 2, 3), results.sorted())
-        
-        // Verify sequential execution pattern - all operations should be processed in order
-        // First job should complete entirely before second job starts, and so on
-        val expected = listOf("work1-start", "work1-end", "work2-start", "work2-end", "work3-start", "work3-end")
-        assertEquals(expected, executionOrder)
-        
-        // This test validates that the rate limiter enforces sequential execution
-        // using the test clock, which is the key behavior we want to verify
+        // Verify only one tasks complete within the first window (< 1 second)
+        testScheduler.advanceTimeBy(999.milliseconds)
+        assertEquals(listOf("work1-start", "work1-end"), executionOrder)
+        assertTrue(job1.isCompleted)
+        assertTrue(job2.isActive)
+        assertTrue(job3.isActive)
+
+        // Verify second task started once we enter the next 1 second window
+        testScheduler.advanceTimeBy(2.milliseconds)
+        assertContains(executionOrder, "work2-start")
+        assertTrue(job2.isActive)
+        assertTrue(job3.isActive)
+
+        // Verify second task complete
+        testScheduler.advanceTimeBy(50.milliseconds)
+        assertEquals(
+            expected = listOf(
+                "work1-start",
+                "work1-end",
+                "work2-start",
+                "work2-end",
+            ),
+            actual = executionOrder,
+        )
+        assertTrue(job2.isCompleted)
+        assertTrue(job3.isActive)
+
+        // Verify third task started and completed in third window
+        testScheduler.advanceTimeBy(1.seconds + 50.milliseconds)
+        assertEquals(
+            expected = listOf(
+                "work1-start",
+                "work1-end",
+                "work2-start",
+                "work2-end",
+                "work3-start",
+                "work3-end",
+            ),
+            actual = executionOrder,
+        )
+        assertTrue(job3.isCompleted)
     }
 
     @Test
-    fun `failed work should not affect subsequent work`() = runTest {
-        val scheduler = RateLimiterImpl(createTestClock(testScheduler))
+    fun failedWorkShouldNotAffectSubsequentWork() = runTest {
+        val rateLimiter = RateLimiterImpl(createTestClock(testScheduler))
         val results = mutableListOf<String>()
         
         // First work item succeeds
         val job1 = async {
-            scheduler.withRateLimit {
+            rateLimiter.withRateLimit {
                 results.add("work1")
                 "success1"
             }
@@ -162,7 +196,7 @@ class RateLimiterImplTest {
         // Second work item fails
         val job2 = async {
             try {
-                scheduler.withRateLimit {
+                rateLimiter.withRateLimit {
                     results.add("work2")
                     throw RuntimeException("Test failure")
                 }
@@ -173,7 +207,7 @@ class RateLimiterImplTest {
         
         // Third work item succeeds
         val job3 = async {
-            scheduler.withRateLimit {
+            rateLimiter.withRateLimit {
                 results.add("work3")
                 "success3"
             }
@@ -183,59 +217,6 @@ class RateLimiterImplTest {
         
         // First and third should succeed, second should fail
         assertEquals(listOf("success1", "failed2", "success3"), finalResults)
-        
-        // All work should have been attempted
         assertEquals(listOf("work1", "work2", "work3"), results)
-    }
-
-    @Test
-    fun `cooperative scheduling allows queue progression after failures`() = runTest {
-        val scheduler = RateLimiterImpl(createTestClock(testScheduler))
-        val executionOrder = mutableListOf<String>()
-
-        // First work succeeds
-        val job1 = async {
-            try {
-                scheduler.withRateLimit {
-                    executionOrder.add("work1")
-                    "success"
-                }
-            } catch (e: Exception) {
-                executionOrder.add("work1-failed")
-                "failed"
-            }
-        }
-        
-        // Second work fails
-        val job2 = async {
-            try {
-                scheduler.withRateLimit {
-                    executionOrder.add("work2")
-                    throw RuntimeException("Intentional failure")
-                }
-            } catch (e: Exception) {
-                executionOrder.add("work2-failed")
-                "failed"
-            }
-        }
-        
-        // Third work should still execute despite second work failure
-        val job3 = async {
-            try {
-                scheduler.withRateLimit {
-                    executionOrder.add("work3")
-                    "success"
-                }
-            } catch (e: Exception) {
-                executionOrder.add("work3-failed")
-                "failed"
-            }
-        }
-
-        val results = listOf(job1.await(), job2.await(), job3.await())
-        
-        // Verify execution order and results
-        assertEquals(listOf("work1", "work2", "work2-failed", "work3"), executionOrder)
-        assertEquals(listOf("success", "failed", "success"), results)
     }
 }
