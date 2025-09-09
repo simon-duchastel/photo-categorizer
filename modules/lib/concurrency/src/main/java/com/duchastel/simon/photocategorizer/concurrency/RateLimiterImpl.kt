@@ -15,8 +15,6 @@ import kotlin.time.Instant
  * 
  * This implementation ensures that at most [MAX_OPERATIONS_PER_WINDOW] tasks complete in any
  * [RATE_LIMIT_WINDOW] seconds window.
- * Each work item coordinates with others through shared state, without needing a background
- * processor.
  */
 @OptIn(ExperimentalTime::class)
 class RateLimiterImpl @Inject internal constructor(
@@ -45,7 +43,7 @@ class RateLimiterImpl @Inject internal constructor(
         val isFirst = mutex.withLock {
             val wasEmpty = workQueue.isEmpty()
             workQueue.add(workItem)
-            
+
             if (wasEmpty) {
                 workItem.readyToExecute.complete(Unit)
             }
@@ -61,7 +59,7 @@ class RateLimiterImpl @Inject internal constructor(
 
             val result = work()
             recordCompletion()
-            
+
             return result
         } finally {
             signalNextWorkItem()
@@ -80,7 +78,7 @@ class RateLimiterImpl @Inject internal constructor(
             }
         }
     }
-    
+
     private suspend fun enforceRateLimit() {
         val delayTime = mutex.withLock {
             val now = clock.now()
@@ -100,7 +98,7 @@ class RateLimiterImpl @Inject internal constructor(
 
         delayTime?.let { delay(it) }
     }
-    
+
     private suspend fun recordCompletion() {
         val now = clock.now()
         mutex.withLock {
