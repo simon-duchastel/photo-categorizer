@@ -19,7 +19,6 @@ interface RateLimiter {
      * 
      * @param work The work to be executed
      * @return The result of the work execution
-     * @throws Exception if the work throws an exception or if the coroutine is cancelled
      */
     suspend fun <T> withRateLimit(work: suspend () -> T): T
 }

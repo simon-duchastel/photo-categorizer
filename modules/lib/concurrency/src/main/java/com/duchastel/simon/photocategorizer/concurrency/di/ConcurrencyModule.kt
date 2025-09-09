@@ -11,10 +11,9 @@ import kotlin.time.ExperimentalTime
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class ConcurrencyModule {
+interface ConcurrencyModule {
 
     @OptIn(ExperimentalTime::class)
     @Binds
-    @Singleton
     abstract fun bindRateLimiter(rateLimiterImpl: RateLimiterImpl): RateLimiter
 }

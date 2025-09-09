@@ -14,6 +14,5 @@ object TimeModule {
 
     @OptIn(ExperimentalTime::class)
     @Provides
-    @Singleton
     fun provideClock(): Clock = Clock.System
 }
