@@ -102,18 +102,16 @@ class SettingsViewModel @Inject constructor(
     private fun saveSettings(userSettings: UserSettings) {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
-            
+
             try {
                 localStorage.put(SETTINGS_KEY, userSettings)
-                _state.update { it.copy(
-                    isSaving = false,
-                    showSuccessMessage = true
-                ) }
-            } catch (e: Exception) {
-                _state.update { it.copy(
-                    isSaving = false,
-                    showErrorMessage = true
-                ) }
+            } finally {
+                _state.update {
+                    it.copy(
+                        isSaving = false,
+                        showErrorMessage = true
+                    )
+                }
             }
         }
     }
