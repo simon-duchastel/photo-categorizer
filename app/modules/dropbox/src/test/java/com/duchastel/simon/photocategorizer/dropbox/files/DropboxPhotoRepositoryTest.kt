@@ -10,14 +10,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.HttpException
 import retrofit2.Response
@@ -27,14 +20,12 @@ import kotlin.test.assertTrue
 
 class DropboxPhotoRepositoryTest {
 
-    @Mock
     private lateinit var mockNetworkApi: DropboxFileApi
-
     private lateinit var repository: DropboxPhotoRepository
 
     @Before
     fun setup() {
-        MockitoAnnotations.openMocks(this)
+        mockNetworkApi = mock<DropboxFileApi>()
         repository = DropboxPhotoRepository(mockNetworkApi)
     }
 
