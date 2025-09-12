@@ -14,7 +14,7 @@ import kotlin.time.ExperimentalTime
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface  ConcurrencyModule {
+interface ConcurrencyModule {
 
     @OptIn(ExperimentalTime::class)
     @Binds
