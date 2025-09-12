@@ -68,7 +68,7 @@ class PhotoSwiperViewModelTest {
         whenever(localStorage.getString(any())).thenReturn(null)
         whenever(localStorage.putString(any(), any())).then { /* do nothing */ }
 
-        viewModel = PhotoSwiperViewModel(photoRepository, localStorage)
+        viewModel = PhotoSwiperViewModel(photoRepository, localStorage, testDispatcher)
     }
 
     @Test

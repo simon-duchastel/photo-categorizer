@@ -3,6 +3,7 @@ package com.duchastel.simon.photocategorizer.screens.photoswiper
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil3.request.ImageRequest
+import com.duchastel.simon.photocategorizer.concurrency.di.IoDispatcher
 import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
 import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import com.duchastel.simon.photocategorizer.screens.settings.UserSettings
@@ -10,7 +11,7 @@ import com.duchastel.simon.photocategorizer.storage.LocalStorageRepository
 import com.duchastel.simon.photocategorizer.storage.get
 import com.duchastel.simon.photocategorizer.storage.put
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -28,6 +29,7 @@ import javax.inject.Inject
 class PhotoSwiperViewModel @Inject constructor(
     @Dropbox private val photoRepository: PhotoRepository,
     private val localStorage: LocalStorageRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     // state and init
@@ -37,7 +39,7 @@ class PhotoSwiperViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val photos = withContext(Dispatchers.IO) {
+            val photos = withContext(ioDispatcher) {
                 photoRepository.getPhotos("/camera test/camera roll")
                     .map { DisplayPhoto(path = it.path) }
             }
@@ -156,7 +158,7 @@ class PhotoSwiperViewModel @Inject constructor(
     }
 
     private suspend fun processPhotoToNewFolder(photo: DisplayPhoto, folderName: String) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val newPath = "/$folderName/${photo.fileName}"
             photoRepository.movePhoto(
                 originalPath = photo.path,
@@ -175,7 +177,7 @@ class PhotoSwiperViewModel @Inject constructor(
     }
 
     private suspend fun processRightSwipe(photo: DisplayPhoto) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
             photoRepository.movePhoto(
                 originalPath = photo.path,
@@ -185,7 +187,7 @@ class PhotoSwiperViewModel @Inject constructor(
     }
 
     private suspend fun processUpSwipe(photo: DisplayPhoto) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
             photoRepository.movePhoto(
                 originalPath = photo.path,
