@@ -42,11 +42,12 @@ dependencies {
     // UI dependencies
     implementation(project(":modules:ui:theme"))
     implementation(project(":modules:ui:components"))
-    
+
     // Business logic dependencies
     implementation(project(":modules:lib:filemanager"))
     implementation(project(":modules:lib:dropbox"))
     implementation(project(":modules:lib:storage"))
+    implementation(project(":modules:ui:screens:settings"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -65,4 +66,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test.v173)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
 }

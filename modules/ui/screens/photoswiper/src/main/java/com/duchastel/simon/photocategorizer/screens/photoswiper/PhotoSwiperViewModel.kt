@@ -5,6 +5,10 @@ import androidx.lifecycle.viewModelScope
 import coil3.request.ImageRequest
 import com.duchastel.simon.photocategorizer.dropbox.di.Dropbox
 import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
+import com.duchastel.simon.photocategorizer.screens.settings.UserSettings
+import com.duchastel.simon.photocategorizer.storage.LocalStorageRepository
+import com.duchastel.simon.photocategorizer.storage.get
+import com.duchastel.simon.photocategorizer.storage.put
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -22,7 +26,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PhotoSwiperViewModel @Inject constructor(
-    @Dropbox private val photoRepository: PhotoRepository
+    @Dropbox private val photoRepository: PhotoRepository,
+    private val localStorage: LocalStorageRepository,
 ) : ViewModel() {
 
     // state and init
@@ -81,6 +86,43 @@ class PhotoSwiperViewModel @Inject constructor(
         }
     }
 
+    fun showNewFolderModal(photo: DisplayPhoto) {
+        _state.update { oldState ->
+            oldState.copy(
+                newFolderModal = NewFolderModalState(photo = photo)
+            )
+        }
+    }
+
+    fun hideNewFolderModal() {
+        _state.update { oldState ->
+            oldState.copy(newFolderModal = null)
+        }
+    }
+
+    fun updateNewFolderName(name: String) {
+        _state.update { oldState ->
+            oldState.newFolderModal?.let { modal ->
+                oldState.copy(
+                    newFolderModal = modal.copy(folderName = name)
+                )
+            } ?: oldState
+        }
+    }
+
+    fun confirmNewFolder() {
+        val currentState = _state.value
+        val modal = currentState.newFolderModal ?: return
+
+        if (modal.folderName.isBlank()) return
+
+        hideNewFolderModal()
+
+        viewModelScope.launch {
+            processPhotoToNewFolder(modal.photo, modal.folderName)
+        }
+    }
+
     // private functions
 
     private suspend fun syncDisplayUrls(
@@ -109,8 +151,27 @@ class PhotoSwiperViewModel @Inject constructor(
             }.awaitAll()
     }
 
-    private suspend fun processLeftSwipe(photo: DisplayPhoto) {
+    private fun processLeftSwipe(photo: DisplayPhoto) {
+        showNewFolderModal(photo)
+    }
 
+    private suspend fun processPhotoToNewFolder(photo: DisplayPhoto, folderName: String) {
+        withContext(Dispatchers.IO) {
+            val newPath = "/$folderName/${photo.fileName}"
+            photoRepository.movePhoto(
+                originalPath = photo.path,
+                newPath = newPath,
+            )
+
+            // Update settings to use this as the new destination folder
+            updateDestinationFolder("/$folderName")
+        }
+    }
+
+    private fun updateDestinationFolder(newFolderPath: String) {
+        val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
+        val updatedSettings = currentSettings.copy(destinationFolderPath = newFolderPath)
+        localStorage.put(SETTINGS_KEY, updatedSettings)
     }
 
     private suspend fun processRightSwipe(photo: DisplayPhoto) {
@@ -136,6 +197,12 @@ class PhotoSwiperViewModel @Inject constructor(
     data class State(
         val photos: List<DisplayPhoto> = emptyList(),
         val photoIndex: Int = 0,
+        val newFolderModal: NewFolderModalState? = null,
+    )
+
+    data class NewFolderModalState(
+        val photo: DisplayPhoto,
+        val folderName: String = "",
     )
 
     data class DisplayPhoto(
@@ -148,5 +215,6 @@ class PhotoSwiperViewModel @Inject constructor(
 
     companion object {
         const val PHOTO_BUFFER_SIZE = 5
+        private const val SETTINGS_KEY = "user_settings"
     }
 }
