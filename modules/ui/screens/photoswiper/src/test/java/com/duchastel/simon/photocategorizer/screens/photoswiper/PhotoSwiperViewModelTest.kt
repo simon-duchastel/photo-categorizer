@@ -77,18 +77,10 @@ class PhotoSwiperViewModelTest {
 
         val state = viewModel.state.first()
         
-        // Debug: Print actual state for troubleshooting
-        println("Debug: photoIndex=${state.photoIndex}, photos.size=${state.photos.size}, newFolderModal=${state.newFolderModal}")
-
         assertEquals(0, state.photoIndex)
         assertNull(state.newFolderModal)
-        
-        // Check if photos is empty and provide better error message
-        if (state.photos.isEmpty()) {
-            println("Debug: Photos list is empty - mock may not be working")
-        }
-        
-        assertEquals("Photos should be loaded from mocked repository", 2, state.photos.size)
+
+        assertEquals(2, state.photos.size)
     }
 
     @Test
@@ -142,8 +134,6 @@ class PhotoSwiperViewModelTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         
-        // Debug: check if photos are loaded
-        assertTrue("Photos should be loaded", state.photos.isNotEmpty())
         val photo = state.photos[0]
 
         viewModel.showNewFolderModal(photo)
@@ -169,7 +159,6 @@ class PhotoSwiperViewModelTest {
      fun `attachImageRequest should update photo with image request`() = runTest {
          advanceUntilIdle()
          val state = viewModel.state.first()
-         if (state.photos.isEmpty()) return@runTest // Skip if photos not loaded
          val photo = state.photos[0]
          val mockImageRequest = mock<ImageRequest>()
 
