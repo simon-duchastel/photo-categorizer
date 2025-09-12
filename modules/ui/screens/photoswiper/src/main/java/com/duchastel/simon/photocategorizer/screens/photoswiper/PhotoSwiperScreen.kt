@@ -34,9 +34,9 @@ import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperViewM
 import com.duchastel.simon.photocategorizer.screens.photoswiper.PhotoSwiperViewModel.DisplayPhoto
 import com.duchastel.simon.photocategorizer.ui.components.HorizontalSwiper
 import com.duchastel.simon.photocategorizer.ui.components.HorizontalSwipeDirection
-import com.duchastel.simon.photocategorizer.ui.components.NewFolderModal
 import com.duchastel.simon.photocategorizer.ui.components.OneWayVerticalSwiper
 import com.duchastel.simon.photocategorizer.ui.components.SkeletonLoader
+import com.duchastel.simon.photocategorizer.ui.components.TextInputModal
 import com.duchastel.simon.photocategorizer.ui.components.rememberVerticalSwiperState
 
 @Composable
@@ -169,9 +169,13 @@ private fun PhotoSwiperContent(
 
     // Show modal when state is not null
     modalState?.let { modal ->
-        NewFolderModal(
-            folderName = modal.folderName,
-            onFolderNameChanged = onUpdateFolderName,
+        TextInputModal(
+            title = "New Category",
+            inputValue = modal.folderName,
+            inputLabel = "Folder Name",
+            inputPlaceholder = "Enter folder name",
+            confirmButtonText = "Create",
+            onInputChanged = onUpdateFolderName,
             onConfirm = onConfirmFolder,
             onDismiss = onDismissModal,
         )
