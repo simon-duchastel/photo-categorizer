@@ -3,7 +3,11 @@ package com.duchastel.simon.photocategorizer.screens.photoswiper
 import coil3.request.ImageRequest
 import com.duchastel.simon.photocategorizer.filemanager.Photo
 import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
+import com.duchastel.simon.photocategorizer.screens.settings.BackendType
+import com.duchastel.simon.photocategorizer.screens.settings.UserSettings
 import com.duchastel.simon.photocategorizer.storage.LocalStorageRepository
+import com.duchastel.simon.photocategorizer.storage.get
+import com.duchastel.simon.photocategorizer.storage.put
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -58,8 +62,11 @@ class PhotoSwiperViewModelTest {
         // Setup default mock behavior for suspend functions
         runBlocking { 
             doAnswer { samplePhotos }.whenever(photoRepository).getPhotos(any())
+            doAnswer { /* mock movePhoto to do nothing */ }.whenever(photoRepository).movePhoto(any(), any())
+            doAnswer { "mock-url" }.whenever(photoRepository).getUnauthenticatedLinkForPhoto(any())
         }
         whenever(localStorage.getString(any())).thenReturn(null)
+        whenever(localStorage.putString(any(), any())).then { /* do nothing */ }
 
         viewModel = PhotoSwiperViewModel(photoRepository, localStorage)
     }
@@ -211,4 +218,133 @@ class PhotoSwiperViewModelTest {
          assertEquals(1, updatedState.photoIndex)
          assertNotNull(updatedState.newFolderModal)
      }
+
+    @Test
+    fun `processPhoto with right swipe should use destinationFolderPath from localStorage`() = runTest {
+        advanceUntilIdle()
+        val customSettings = UserSettings(
+            backendType = BackendType.DROPBOX,
+            cameraRollPath = "/custom/camera",
+            destinationFolderPath = "/custom/destination",
+            archiveFolderPath = "/custom/archive"
+        )
+        val settingsJson = """{"backendType":"DROPBOX","cameraRollPath":"/custom/camera","destinationFolderPath":"/custom/destination","archiveFolderPath":"/custom/archive"}"""
+        whenever(localStorage.getString("user_settings")).thenReturn(settingsJson)
+
+        viewModel.processPhoto(0, SwipeDirection.Right)
+
+        advanceUntilIdle()
+        runBlocking {
+            verify(photoRepository).movePhoto(
+                originalPath = "/camera test/camera roll/photo1.jpg",
+                newPath = "/custom/destination/photo1.jpg"
+            )
+        }
+    }
+
+    @Test
+    fun `processPhoto with right swipe should use default settings when localStorage is empty`() = runTest {
+        advanceUntilIdle()
+        whenever(localStorage.getString("user_settings")).thenReturn(null)
+
+        viewModel.processPhoto(0, SwipeDirection.Right)
+
+        advanceUntilIdle()
+        runBlocking {
+            verify(photoRepository).movePhoto(
+                originalPath = "/camera test/camera roll/photo1.jpg",
+                newPath = "/camera test/first event/photo1.jpg"
+            )
+        }
+    }
+
+    @Test
+    fun `processPhoto with up swipe should use archiveFolderPath from localStorage`() = runTest {
+        advanceUntilIdle()
+        val customSettings = UserSettings(
+            backendType = BackendType.DROPBOX,
+            cameraRollPath = "/custom/camera",
+            destinationFolderPath = "/custom/destination",
+            archiveFolderPath = "/custom/archive"
+        )
+        val settingsJson = """{"backendType":"DROPBOX","cameraRollPath":"/custom/camera","destinationFolderPath":"/custom/destination","archiveFolderPath":"/custom/archive"}"""
+        whenever(localStorage.getString("user_settings")).thenReturn(settingsJson)
+
+        viewModel.processPhoto(0, SwipeDirection.Up)
+
+        advanceUntilIdle()
+        runBlocking {
+            verify(photoRepository).movePhoto(
+                originalPath = "/camera test/camera roll/photo1.jpg",
+                newPath = "/custom/archive/photo1.jpg"
+            )
+        }
+    }
+
+    @Test
+    fun `processPhoto with up swipe should use default settings when localStorage is empty`() = runTest {
+        advanceUntilIdle()
+        whenever(localStorage.getString("user_settings")).thenReturn(null)
+
+        viewModel.processPhoto(0, SwipeDirection.Up)
+
+        advanceUntilIdle()
+        runBlocking {
+            verify(photoRepository).movePhoto(
+                originalPath = "/camera test/camera roll/photo1.jpg",
+                newPath = "/camera test/camera roll archive/photo1.jpg"
+            )
+        }
+    }
+
+    @Test
+    fun `confirmNewFolder should update destinationFolderPath in localStorage`() = runTest {
+        advanceUntilIdle()
+        val state = viewModel.state.first()
+        val photo = state.photos[0]
+        
+        val existingSettingsJson = """{"backendType":"DROPBOX","cameraRollPath":"/camera/roll","destinationFolderPath":"/old/destination","archiveFolderPath":"/archive"}"""
+        whenever(localStorage.getString("user_settings")).thenReturn(existingSettingsJson)
+
+        viewModel.showNewFolderModal(photo)
+        viewModel.updateNewFolderName("vacation")
+        viewModel.confirmNewFolder()
+
+        advanceUntilIdle()
+        
+        val expectedUpdatedSettingsJson = """{"backendType":"DROPBOX","cameraRollPath":"/camera/roll","destinationFolderPath":"/vacation","archiveFolderPath":"/archive"}"""
+        verify(localStorage).putString("user_settings", expectedUpdatedSettingsJson)
+        
+        runBlocking {
+            verify(photoRepository).movePhoto(
+                originalPath = "/camera test/camera roll/photo1.jpg",
+                newPath = "/vacation/photo1.jpg"
+            )
+        }
+    }
+
+    @Test
+    fun `confirmNewFolder should use default settings when localStorage is empty`() = runTest {
+        advanceUntilIdle()
+        val state = viewModel.state.first()
+        val photo = state.photos[0]
+        
+        whenever(localStorage.getString("user_settings")).thenReturn(null)
+
+        viewModel.showNewFolderModal(photo)
+        viewModel.updateNewFolderName("vacation")
+        viewModel.confirmNewFolder()
+
+        advanceUntilIdle()
+        
+        val expectedUpdatedSettingsJson = """{"backendType":"DROPBOX","cameraRollPath":"/camera test/camera roll","destinationFolderPath":"/vacation","archiveFolderPath":"/camera test/camera roll archive"}"""
+        verify(localStorage).putString("user_settings", expectedUpdatedSettingsJson)
+        
+        runBlocking {
+            verify(photoRepository).movePhoto(
+                originalPath = "/camera test/camera roll/photo1.jpg",
+                newPath = "/vacation/photo1.jpg"
+            )
+        }
+    }
 }
