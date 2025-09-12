@@ -113,11 +113,11 @@ class PhotoSwiperViewModel @Inject constructor(
     fun confirmNewFolder() {
         val currentState = _state.value
         val modal = currentState.newFolderModal ?: return
-        
+
         if (modal.folderName.isBlank()) return
-        
+
         hideNewFolderModal()
-        
+
         viewModelScope.launch {
             processPhotoToNewFolder(modal.photo, modal.folderName)
         }
@@ -151,24 +151,24 @@ class PhotoSwiperViewModel @Inject constructor(
             }.awaitAll()
     }
 
-    private suspend fun processLeftSwipe(photo: DisplayPhoto) {
+    private fun processLeftSwipe(photo: DisplayPhoto) {
         showNewFolderModal(photo)
     }
 
     private suspend fun processPhotoToNewFolder(photo: DisplayPhoto, folderName: String) {
         withContext(Dispatchers.IO) {
-            val newPath = "/camera test/$folderName/${photo.fileName}"
+            val newPath = "/$folderName/${photo.fileName}"
             photoRepository.movePhoto(
                 originalPath = photo.path,
                 newPath = newPath,
             )
-            
+
             // Update settings to use this as the new destination folder
-            updateDestinationFolder("/camera test/$folderName")
+            updateDestinationFolder("/$folderName")
         }
     }
 
-    private suspend fun updateDestinationFolder(newFolderPath: String) {
+    private fun updateDestinationFolder(newFolderPath: String) {
         val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
         val updatedSettings = currentSettings.copy(destinationFolderPath = newFolderPath)
         localStorage.put(SETTINGS_KEY, updatedSettings)
