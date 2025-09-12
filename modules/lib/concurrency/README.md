@@ -93,7 +93,6 @@ The module includes comprehensive tests covering:
 
 - `kotlinx.coroutines`: For coroutine support, concurrency primitives, and dispatchers
 - `dagger.hilt`: For dependency injection
-- `javax.inject`: For injection annotations and qualifier annotations
 - `kotlin.time`: For precise timing operations
 
 ## Thread Safety
