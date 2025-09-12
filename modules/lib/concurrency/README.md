@@ -25,10 +25,20 @@ The concurrency module contains utilities for managing asynchronous work executi
 
 ### ConcurrencyModule
 - **Purpose**: Hilt dependency injection module
-- **Provides**: Binds RateLimiterImpl to RateLimiter interface
+- **Provides**: 
+  - Binds RateLimiterImpl to RateLimiter interface
+  - Provides IoDispatcher-qualified Dispatchers.IO
+  - Provides MainDispatcher-qualified Dispatchers.Main
 
-## Usage Example
+### Dispatcher Qualifiers
+- **IoDispatcher**: Qualifier annotation for injecting IO dispatcher
+- **MainDispatcher**: Qualifier annotation for injecting Main dispatcher
+- **Purpose**: Enables dependency injection of specific coroutine dispatchers
+- **Usage**: Use `@IoDispatcher` or `@MainDispatcher` annotations when injecting CoroutineDispatcher
 
+## Usage Examples
+
+### Rate Limiter Usage
 ```kotlin
 @Inject
 private lateinit var rateLimiter: RateLimiter
@@ -37,6 +47,26 @@ suspend fun performRateLimitedOperation() {
     val result = rateLimiter.scheduleWork {
         // Your work that needs rate limiting
         apiCall()
+    }
+}
+```
+
+### Dispatcher Injection Usage
+```kotlin
+class MyRepository @Inject constructor(
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @MainDispatcher private val mainDispatcher: CoroutineDispatcher
+) {
+    suspend fun performBackgroundWork() {
+        withContext(ioDispatcher) {
+            // IO-bound operations
+            fileOperations()
+        }
+        
+        withContext(mainDispatcher) {
+            // UI updates
+            updateUI()
+        }
     }
 }
 ```
@@ -61,9 +91,8 @@ The module includes comprehensive tests covering:
 
 ## Dependencies
 
-- `kotlinx.coroutines`: For coroutine support and concurrency primitives
+- `kotlinx.coroutines`: For coroutine support, concurrency primitives, and dispatchers
 - `dagger.hilt`: For dependency injection
-- `javax.inject`: For injection annotations
 - `kotlin.time`: For precise timing operations
 
 ## Thread Safety
