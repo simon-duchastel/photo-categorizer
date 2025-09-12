@@ -176,18 +176,20 @@ class PhotoSwiperViewModel @Inject constructor(
 
     private suspend fun processRightSwipe(photo: DisplayPhoto) {
         withContext(Dispatchers.IO) {
+            val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
             photoRepository.movePhoto(
                 originalPath = photo.path,
-                newPath ="/camera test/first event/${photo.fileName}",
+                newPath = "${currentSettings.destinationFolderPath}/${photo.fileName}",
             )
         }
     }
 
     private suspend fun processUpSwipe(photo: DisplayPhoto) {
         withContext(Dispatchers.IO) {
+            val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
             photoRepository.movePhoto(
                 originalPath = photo.path,
-                newPath ="/camera test/camera roll archive/${photo.fileName}",
+                newPath = "${currentSettings.archiveFolderPath}/${photo.fileName}",
             )
         }
     }
