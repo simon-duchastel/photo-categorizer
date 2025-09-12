@@ -21,6 +21,7 @@ ui/
 Reusable UI components used across multiple screens:
 - **`HorizontalSwiper`** - Swipeable photo viewer component
 - **`OneWayVerticalSwiper`** - Vertical swipe component  
+- **`NewFolderModal`** - Modal dialog for creating new folders/categories
 - **`Shimmer`** - Loading shimmer effect
 - **`SkeletonLoader`** - Skeleton loading animations
 - **`SwipeDirection`** - Swipe direction enumeration
