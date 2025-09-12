@@ -61,9 +61,9 @@ class PhotoSwiperViewModelTest {
 
         // Setup default mock behavior for suspend functions
         runBlocking { 
-            doAnswer { samplePhotos }.whenever(photoRepository).getPhotos(any())
-            doAnswer { /* mock movePhoto to do nothing */ }.whenever(photoRepository).movePhoto(any(), any())
-            doAnswer { "mock-url" }.whenever(photoRepository).getUnauthenticatedLinkForPhoto(any())
+            whenever(photoRepository.getPhotos(any())).thenReturn(samplePhotos)
+            whenever(photoRepository.movePhoto(any(), any())).then { /* do nothing */ }
+            whenever(photoRepository.getUnauthenticatedLinkForPhoto(any())).thenReturn("mock-url")
         }
         whenever(localStorage.getString(any())).thenReturn(null)
         whenever(localStorage.putString(any(), any())).then { /* do nothing */ }
@@ -76,10 +76,19 @@ class PhotoSwiperViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.state.first()
+        
+        // Debug: Print actual state for troubleshooting
+        println("Debug: photoIndex=${state.photoIndex}, photos.size=${state.photos.size}, newFolderModal=${state.newFolderModal}")
 
         assertEquals(0, state.photoIndex)
         assertNull(state.newFolderModal)
-        assertEquals(2, state.photos.size)
+        
+        // Check if photos is empty and provide better error message
+        if (state.photos.isEmpty()) {
+            println("Debug: Photos list is empty - mock may not be working")
+        }
+        
+        assertEquals("Photos should be loaded from mocked repository", 2, state.photos.size)
     }
 
     @Test
