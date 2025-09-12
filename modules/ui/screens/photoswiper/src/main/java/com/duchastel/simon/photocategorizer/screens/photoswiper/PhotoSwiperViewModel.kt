@@ -65,17 +65,11 @@ class PhotoSwiperViewModel @Inject constructor(
         }
 
         val photo = currentState.photos[index]
-        when (direction) {
-            SwipeDirection.Left -> processLeftSwipe(photo)
-            SwipeDirection.Right -> {
-                viewModelScope.launch {
-                    processRightSwipe(photo)
-                }
-            }
-            SwipeDirection.Up -> {
-                viewModelScope.launch {
-                    processUpSwipe(photo)
-                }
+        viewModelScope.launch {
+            when (direction) {
+                SwipeDirection.Left -> processLeftSwipe(photo)
+                SwipeDirection.Right -> processRightSwipe(photo)
+                SwipeDirection.Up -> processUpSwipe(photo)
             }
         }
     }

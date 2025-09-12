@@ -1,9 +1,8 @@
 package com.duchastel.simon.photocategorizer.screens.photoswiper
 
 import coil3.request.ImageRequest
-import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import com.duchastel.simon.photocategorizer.filemanager.Photo
-import com.duchastel.simon.photocategorizer.screens.settings.UserSettings
+import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
 import com.duchastel.simon.photocategorizer.storage.LocalStorageRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -13,10 +12,18 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PhotoSwiperViewModelTest {
@@ -142,23 +149,24 @@ class PhotoSwiperViewModelTest {
         verify(photoRepository, never()).movePhoto(any(), any())
     }
 
-    // @Test - Commented out due to async photo loading timing issues
-    // fun `attachImageRequest should update photo with image request`() = runTest {
-    //     advanceUntilIdle()
-    //     val state = viewModel.state.first()
-    //     if (state.photos.isEmpty()) return@runTest // Skip if photos not loaded
-    //     val photo = state.photos[0]
-    //     val mockImageRequest = mock<ImageRequest>()
-    //
-    //     viewModel.attachImageRequest(photo, mockImageRequest)
-    //
-    //     val updatedState = viewModel.state.first()
-    //     assertEquals(mockImageRequest, updatedState.photos[0].imageRequest)
-    //     // Other photos should remain unchanged
-    //     if (updatedState.photos.size > 1) {
-    //         assertNull(updatedState.photos[1].imageRequest)
-    //     }
-    // }
+    @Test
+     fun `attachImageRequest should update photo with image request`() = runTest {
+         advanceUntilIdle()
+         val state = viewModel.state.first()
+         if (state.photos.isEmpty()) return@runTest // Skip if photos not loaded
+         val photo = state.photos[0]
+         val mockImageRequest = mock<ImageRequest>()
+
+         viewModel.attachImageRequest(photo, mockImageRequest)
+
+         advanceUntilIdle()
+         val updatedState = viewModel.state.first()
+         assertEquals(mockImageRequest, updatedState.photos[0].imageRequest)
+         // Other photos should remain unchanged
+         if (updatedState.photos.size > 1) {
+             assertNull(updatedState.photos[1].imageRequest)
+         }
+     }
 
     @Test
     fun `DisplayPhoto fileName should extract correct file name`() {
@@ -181,24 +189,26 @@ class PhotoSwiperViewModelTest {
         assertEquals("", modalState.folderName)
     }
 
-    // @Test - Commented out due to async photo loading timing issues
-    // fun `processPhoto should advance photo index`() = runTest {
-    //     advanceUntilIdle()
-    //     
-    //     viewModel.processPhoto(0, SwipeDirection.Right)
-    //
-    //     val updatedState = viewModel.state.first()
-    //     assertEquals(1, updatedState.photoIndex)
-    // }
+    @Test
+     fun `processPhoto should advance photo index`() = runTest {
+         advanceUntilIdle()
 
-    // @Test - Commented out due to async photo loading timing issues
-    // fun `processPhoto with left swipe should show modal and advance index`() = runTest {
-    //     advanceUntilIdle()
-    //
-    //     viewModel.processPhoto(0, SwipeDirection.Left)
-    //
-    //     val updatedState = viewModel.state.first()
-    //     assertEquals(1, updatedState.photoIndex)
-    //     assertNotNull(updatedState.newFolderModal)
-    // }
+         viewModel.processPhoto(0, SwipeDirection.Right)
+
+        advanceUntilIdle()
+         val updatedState = viewModel.state.first()
+         assertEquals(1, updatedState.photoIndex)
+     }
+
+     @Test
+     fun `processPhoto with left swipe should show modal and advance index`() = runTest {
+         advanceUntilIdle()
+
+         viewModel.processPhoto(0, SwipeDirection.Left)
+
+         advanceUntilIdle()
+         val updatedState = viewModel.state.first()
+         assertEquals(1, updatedState.photoIndex)
+         assertNotNull(updatedState.newFolderModal)
+     }
 }
