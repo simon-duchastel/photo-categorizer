@@ -47,6 +47,7 @@ dependencies {
     implementation(project(":modules:lib:filemanager"))
     implementation(project(":modules:lib:dropbox"))
     implementation(project(":modules:lib:storage"))
+    implementation(project(":modules:ui:screens:settings"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
