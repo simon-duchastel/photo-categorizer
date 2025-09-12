@@ -35,9 +35,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 @Composable
-fun NewFolderModal(
-    folderName: String,
-    onFolderNameChanged: (String) -> Unit,
+fun TextInputModal(
+    title: String,
+    inputValue: String,
+    inputLabel: String,
+    inputPlaceholder: String,
+    confirmButtonText: String,
+    cancelButtonText: String = "Cancel",
+    onInputChanged: (String) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -70,7 +75,7 @@ fun NewFolderModal(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "New Category",
+                        text = title,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                     )
@@ -88,12 +93,12 @@ fun NewFolderModal(
 
                 Spacer(modifier = Modifier.padding(8.dp))
 
-                // Folder name input
+                // Text input
                 OutlinedTextField(
-                    value = folderName,
-                    onValueChange = onFolderNameChanged,
-                    label = { Text("Folder Name") },
-                    placeholder = { Text("Enter folder name") },
+                    value = inputValue,
+                    onValueChange = onInputChanged,
+                    label = { Text(inputLabel) },
+                    placeholder = { Text(inputPlaceholder) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester),
@@ -102,7 +107,7 @@ fun NewFolderModal(
                     keyboardActions = KeyboardActions(
                         onDone = {
                             keyboardController?.hide()
-                            if (folderName.isNotBlank()) {
+                            if (inputValue.isNotBlank()) {
                                 onConfirm()
                             }
                         }
@@ -124,20 +129,20 @@ fun NewFolderModal(
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     ) {
-                        Text("Cancel")
+                        Text(cancelButtonText)
                     }
 
                     Button(
                         onClick = {
-                            if (folderName.isNotBlank()) {
+                            if (inputValue.isNotBlank()) {
                                 keyboardController?.hide()
                                 onConfirm()
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = folderName.isNotBlank(),
+                        enabled = inputValue.isNotBlank(),
                     ) {
-                        Text("Create")
+                        Text(confirmButtonText)
                     }
                 }
             }
