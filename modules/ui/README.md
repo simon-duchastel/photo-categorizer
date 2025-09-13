@@ -19,6 +19,7 @@ ui/
 
 ### Components (`components/`)
 Reusable UI components used across multiple screens:
+- **`CenteredLoadingState`** - Centered loading indicator with descriptive message text
 - **`HorizontalSwiper`** - Swipeable photo viewer component
 - **`OneWayVerticalSwiper`** - Vertical swipe component  
 - **`TextInputModal`** - Generic modal dialog with text input field and customizable text
