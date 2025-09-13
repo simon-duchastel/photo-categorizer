@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
+import com.duchastel.simon.photocategorizer.ui.components.ValidatedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.duchastel.simon.photocategorizer.ui.components.AutoDismissSnackbar
 import com.duchastel.simon.photocategorizer.ui.components.CenteredLoadingState
 import com.duchastel.simon.photocategorizer.ui.components.TitledCard
 import kotlinx.coroutines.delay
@@ -151,55 +153,37 @@ private fun SettingsContent(
                 
                 state.cameraRollPathError?.let { error ->
                     Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        text = "Folder Configuration",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
-                }
 
-                // Destination Folder Path
-                OutlinedTextField(
-                    value = state.userSettings.destinationFolderPath,
-                    onValueChange = onDestinationFolderPathChanged,
-                    label = { Text("Destination Folder") },
-                    supportingText = {
-                        Text("Target folder for right swipe categorization")
-                    },
-                    isError = state.destinationFolderPathError != null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-                
-                state.destinationFolderPathError?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                    // Camera Roll Path
+                    ValidatedTextField(
+                        value = state.userSettings.cameraRollPath,
+                        onValueChange = onCameraRollPathChanged,
+                        label = "Camera Roll Location",
+                        supportingText = "Source folder containing photos to categorize",
+                        errorMessage = state.cameraRollPathError
                     )
-                }
 
-                // Archive Folder Path
-                OutlinedTextField(
-                    value = state.userSettings.archiveFolderPath,
-                    onValueChange = onArchiveFolderPathChanged,
-                    label = { Text("Archive Folder") },
-                    supportingText = {
-                        Text("Target folder for up swipe archiving")
-                    },
-                    isError = state.archiveFolderPathError != null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-                
-                state.archiveFolderPathError?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
+                    // Destination Folder Path
+                    ValidatedTextField(
+                        value = state.userSettings.destinationFolderPath,
+                        onValueChange = onDestinationFolderPathChanged,
+                        label = "Destination Folder",
+                        supportingText = "Target folder for right swipe categorization",
+                        errorMessage = state.destinationFolderPathError
+                    )
+
+                    // Archive Folder Path
+                    ValidatedTextField(
+                        value = state.userSettings.archiveFolderPath,
+                        onValueChange = onArchiveFolderPathChanged,
+                        label = "Archive Folder",
+                        supportingText = "Target folder for up swipe archiving",
+                        errorMessage = state.archiveFolderPathError
                     )
                 }
             }
@@ -244,30 +228,18 @@ private fun SettingsContent(
         }
 
         // Success/Error Messages
-        if (state.showSuccessMessage) {
-            LaunchedEffect(state.showSuccessMessage) {
-                delay(3000) // Show snackbar for 3 seconds
-                onSuccessMessageShown()
-            }
-            
-            Snackbar(
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Settings saved successfully!")
-            }
-        }
+        AutoDismissSnackbar(
+            message = "Settings saved successfully!",
+            isVisible = state.showSuccessMessage,
+            onDismiss = onSuccessMessageShown,
+            modifier = Modifier.padding(top = 16.dp)
+        )
 
-        if (state.showErrorMessage) {
-            LaunchedEffect(state.showErrorMessage) {
-                delay(3000) // Show snackbar for 3 seconds
-                onErrorMessageShown()
-            }
-            
-            Snackbar(
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Error saving settings. Please try again.")
-            }
-        }
+        AutoDismissSnackbar(
+            message = "Error saving settings. Please try again.",
+            isVisible = state.showErrorMessage,
+            onDismiss = onErrorMessageShown,
+            modifier = Modifier.padding(top = 16.dp)
+        )
     }
 }

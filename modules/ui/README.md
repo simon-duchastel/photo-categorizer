@@ -24,6 +24,7 @@ Reusable UI components used across multiple screens:
 - **`OneWayVerticalSwiper`** - Vertical swipe component  
 - **`TextInputModal`** - Generic modal dialog with text input field and customizable text
 - **`TitledCard`** - Generic card component with title and customizable content slot
+- **`ValidatedTextField`** - Text input field with validation and error handling capabilities
 - **`Shimmer`** - Loading shimmer effect
 - **`SkeletonLoader`** - Skeleton loading animations
 - **`SwipeDirection`** - Swipe direction enumeration
