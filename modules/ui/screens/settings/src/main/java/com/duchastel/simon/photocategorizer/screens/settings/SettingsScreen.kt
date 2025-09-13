@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.duchastel.simon.photocategorizer.ui.components.AutoDismissSnackbar
 import com.duchastel.simon.photocategorizer.ui.components.CenteredLoadingState
+import com.duchastel.simon.photocategorizer.ui.components.TitledCard
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,99 +97,73 @@ private fun SettingsContent(
             )
         } else {
             // Backend Selection
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+            TitledCard(
+                title = "Cloud Storage Backend"
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                var expanded by remember { mutableStateOf(false) }
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
                 ) {
-                    Text(
-                        text = "Cloud Storage Backend",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                    OutlinedTextField(
+                        value = state.userSettings.backendType.displayName,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Backend Type") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
                     )
 
-                    var expanded by remember { mutableStateOf(false) }
-
-                    ExposedDropdownMenuBox(
+                    ExposedDropdownMenu(
                         expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
+                        onDismissRequest = { expanded = false }
                     ) {
-                        OutlinedTextField(
-                            value = state.userSettings.backendType.displayName,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Backend Type") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            BackendType.entries.forEach { backendType ->
-                                DropdownMenuItem(
-                                    text = { Text(backendType.displayName) },
-                                    onClick = {
-                                        onBackendTypeChanged(backendType)
-                                        expanded = false
-                                    }
-                                )
-                            }
+                        BackendType.entries.forEach { backendType ->
+                            DropdownMenuItem(
+                                text = { Text(backendType.displayName) },
+                                onClick = {
+                                    onBackendTypeChanged(backendType)
+                                    expanded = false
+                                }
+                            )
                         }
                     }
                 }
             }
 
             // Folder Configuration
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+            TitledCard(
+                title = "Folder Configuration",
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Folder Configuration",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
+                // Camera Roll Path
+                ValidatedTextField(
+                    value = state.userSettings.cameraRollPath,
+                    onValueChange = onCameraRollPathChanged,
+                    label = "Camera Roll Location",
+                    supportingText = "Source folder containing photos to categorize",
+                    errorMessage = state.cameraRollPathError
+                )
 
-                    // Camera Roll Path
-                    ValidatedTextField(
-                        value = state.userSettings.cameraRollPath,
-                        onValueChange = onCameraRollPathChanged,
-                        label = "Camera Roll Location",
-                        supportingText = "Source folder containing photos to categorize",
-                        errorMessage = state.cameraRollPathError
-                    )
+                // Destination Folder Path
+                ValidatedTextField(
+                    value = state.userSettings.destinationFolderPath,
+                    onValueChange = onDestinationFolderPathChanged,
+                    label = "Destination Folder",
+                    supportingText = "Target folder for right swipe categorization",
+                    errorMessage = state.destinationFolderPathError
+                )
 
-                    // Destination Folder Path
-                    ValidatedTextField(
-                        value = state.userSettings.destinationFolderPath,
-                        onValueChange = onDestinationFolderPathChanged,
-                        label = "Destination Folder",
-                        supportingText = "Target folder for right swipe categorization",
-                        errorMessage = state.destinationFolderPathError
-                    )
-
-                    // Archive Folder Path
-                    ValidatedTextField(
-                        value = state.userSettings.archiveFolderPath,
-                        onValueChange = onArchiveFolderPathChanged,
-                        label = "Archive Folder",
-                        supportingText = "Target folder for up swipe archiving",
-                        errorMessage = state.archiveFolderPathError
-                    )
-                }
+                // Archive Folder Path
+                ValidatedTextField(
+                    value = state.userSettings.archiveFolderPath,
+                    onValueChange = onArchiveFolderPathChanged,
+                    label = "Archive Folder",
+                    supportingText = "Target folder for up swipe archiving",
+                    errorMessage = state.archiveFolderPathError
+                )
             }
 
             // Action Buttons
