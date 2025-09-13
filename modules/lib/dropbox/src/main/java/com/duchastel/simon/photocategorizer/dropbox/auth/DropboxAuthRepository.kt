@@ -108,17 +108,57 @@ internal class DropboxAuthRepository @Inject constructor(
     override suspend fun <T> executeWithAuthToken(
         execute: suspend (authToken: AuthToken) -> T,
     ): T {
-        val authToken: AuthToken = suspendCoroutine { continuation ->
-            state.value.authState.accessToken.let {
-                if (it != null) {
-                    continuation.resume(AuthToken(it))
-                } else {
-                    continuation.resumeWithException(USER_NOT_SIGNED_IN_EXCEPTION)
-                }
-            }
-        }
+        val authToken = getAccessTokenOrRefresh()
+            ?: throw USER_NOT_SIGNED_IN_EXCEPTION
 
         return execute(authToken)
+    }
+
+    override suspend fun refreshToken(): Boolean {
+        val currentState = state.value
+        if (!currentState.isLoggedIn || currentState.authState.refreshToken == null) {
+            return false
+        }
+
+        return suspendCoroutine { continuation ->
+            try {
+                val refreshRequest = currentState.authState.createTokenRefreshRequest()
+                authService.performTokenRequest(refreshRequest) { response, error ->
+                    if (response != null && error == null) {
+                        updateAuthState(response, null)
+                        continuation.resume(true)
+                    } else {
+                        // Refresh failed - user should be logged out
+                        updateAuthStateToLoggedOut()
+                        continuation.resume(false)
+                    }
+                }
+            } catch (e: Exception) {
+                updateAuthStateToLoggedOut()
+                continuation.resume(false)
+            }
+        }
+    }
+
+    override suspend fun getAccessTokenOrRefresh(): AuthToken? {
+        val currentState = state.value
+        
+        if (!currentState.isLoggedIn) {
+            return null
+        }
+
+        val currentToken = currentState.authState.accessToken
+        if (currentToken != null && !currentState.authState.needsTokenRefresh()) {
+            return AuthToken(currentToken)
+        }
+
+        // Token needs refresh
+        val refreshSucceeded = refreshToken()
+        return if (refreshSucceeded) {
+            state.value.authState.accessToken?.let { AuthToken(it) }
+        } else {
+            null
+        }
     }
 
     // Private functions

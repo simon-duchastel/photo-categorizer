@@ -13,14 +13,20 @@ class AccessTokenAuthInterceptor(
         val request = chain.request()
         val authedRequest = try {
             runBlocking {
-                authRepository.executeWithAuthToken { token ->
+                val token = authRepository.getAccessTokenOrRefresh()
+                if (token != null) {
                     request.newBuilder()
                         .header("Authorization", "Bearer ${token.accessToken}")
                         .build()
+                } else {
+                    // No valid token available - proceed with original request
+                    // This will likely result in 401, which AuthRetryInterceptor will handle
+                    request
                 }
             }
         } catch (ex: Exception) {
-            // TODO - handle error better
+            // If token retrieval fails, proceed with original request
+            // This will likely result in 401, which AuthRetryInterceptor will handle
             request
         }
 
