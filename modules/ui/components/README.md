@@ -6,6 +6,7 @@ Reusable UI components used throughout the app.
 - `HorizontalSwiper` - Swipeable photo viewer component
 - `OneWayVerticalSwiper` - Vertical swipe component
 - `TextInputModal` - Generic modal dialog with text input field and customizable text
+- `ValidatedTextField` - Text input field with validation and error handling capabilities
 - `Shimmer` - Loading shimmer effect
 - `SkeletonLoader` - Skeleton loading animations
 - `SwipeDirection` - Swipe direction enumeration
