@@ -178,13 +178,6 @@ private fun SettingsContent(
                         supportingText = {
                             Text("Base folder path for all destination folders")
                         },
-                        enabled = false,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            disabledSupportingTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                        ),
                         isError = state.basePathError != null,
                         modifier = Modifier
                             .fillMaxWidth()
