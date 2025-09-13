@@ -24,6 +24,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
+import com.duchastel.simon.photocategorizer.ui.components.ValidatedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -161,72 +162,31 @@ private fun SettingsContent(
                     )
 
                     // Camera Roll Path
-                    OutlinedTextField(
+                    ValidatedTextField(
                         value = state.userSettings.cameraRollPath,
                         onValueChange = onCameraRollPathChanged,
-                        label = { Text("Camera Roll Location") },
-                        supportingText = {
-                            Text("Source folder containing photos to categorize")
-                        },
-                        isError = state.cameraRollPathError != null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                        label = "Camera Roll Location",
+                        supportingText = "Source folder containing photos to categorize",
+                        errorMessage = state.cameraRollPathError
                     )
-                    
-                    state.cameraRollPathError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
 
                     // Destination Folder Path
-                    OutlinedTextField(
+                    ValidatedTextField(
                         value = state.userSettings.destinationFolderPath,
                         onValueChange = onDestinationFolderPathChanged,
-                        label = { Text("Destination Folder") },
-                        supportingText = {
-                            Text("Target folder for right swipe categorization")
-                        },
-                        isError = state.destinationFolderPathError != null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                        label = "Destination Folder",
+                        supportingText = "Target folder for right swipe categorization",
+                        errorMessage = state.destinationFolderPathError
                     )
-                    
-                    state.destinationFolderPathError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
 
                     // Archive Folder Path
-                    OutlinedTextField(
+                    ValidatedTextField(
                         value = state.userSettings.archiveFolderPath,
                         onValueChange = onArchiveFolderPathChanged,
-                        label = { Text("Archive Folder") },
-                        supportingText = {
-                            Text("Target folder for up swipe archiving")
-                        },
-                        isError = state.archiveFolderPathError != null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                        label = "Archive Folder",
+                        supportingText = "Target folder for up swipe archiving",
+                        errorMessage = state.archiveFolderPathError
                     )
-                    
-                    state.archiveFolderPathError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
                 }
             }
 
