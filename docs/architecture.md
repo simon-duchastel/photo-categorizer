@@ -29,7 +29,7 @@ Core business logic and data management:
 ### UI Layer (`modules/ui/`)
 User interface components and screens:
 
-- **`components/`** - Reusable UI components (swiper, loaders, etc.)
+- **`components/`** - Reusable UI components (swiper, buttons, loaders, etc.)
 - **`screens/`** - Feature-specific screen implementations
 - **`theme/`** - Design system and theming
 

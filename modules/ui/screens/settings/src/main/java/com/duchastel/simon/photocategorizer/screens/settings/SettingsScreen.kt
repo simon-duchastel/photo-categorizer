@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
+import com.duchastel.simon.photocategorizer.ui.components.ValidatedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -37,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.duchastel.simon.photocategorizer.ui.components.AutoDismissSnackbar
+import com.duchastel.simon.photocategorizer.ui.components.CenteredLoadingState
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,17 +94,9 @@ private fun SettingsContent(
         )
 
         if (state.isLoading) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator()
-                Text(
-                    text = "Loading settings...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
+            CenteredLoadingState(
+                message = "Loading settings..."
+            )
         } else {
             // Backend Selection
             Card(
@@ -183,7 +178,7 @@ private fun SettingsContent(
                             .fillMaxWidth()
                             .padding(bottom = 8.dp)
                     )
-                    
+
                     state.basePathError?.let { error ->
                         Text(
                             text = error,
@@ -194,72 +189,31 @@ private fun SettingsContent(
                     }
 
                     // Camera Roll Path
-                    OutlinedTextField(
+                    ValidatedTextField(
                         value = state.userSettings.cameraRollPath,
                         onValueChange = onCameraRollPathChanged,
-                        label = { Text("Camera Roll Location") },
-                        supportingText = {
-                            Text("Source folder containing photos to categorize")
-                        },
-                        isError = state.cameraRollPathError != null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                        label = "Camera Roll Location",
+                        supportingText = "Source folder containing photos to categorize",
+                        errorMessage = state.cameraRollPathError
                     )
-                    
-                    state.cameraRollPathError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
 
                     // Destination Folder Path
-                    OutlinedTextField(
+                    ValidatedTextField(
                         value = state.userSettings.destinationFolderPath,
                         onValueChange = onDestinationFolderPathChanged,
-                        label = { Text("Destination Folder (relative to base path)") },
-                        supportingText = {
-                            Text("Target folder for right swipe categorization • Full path: ${state.userSettings.basePath}${state.userSettings.destinationFolderPath}")
-                        },
-                        isError = state.destinationFolderPathError != null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                        label = "Destination Folder (relative to base path)",
+                        supportingText = "Target folder for right swipe categorization • Full path: ${state.userSettings.basePath}${state.userSettings.destinationFolderPath}",
+                        errorMessage = state.destinationFolderPathError
                     )
-                    
-                    state.destinationFolderPathError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
 
                     // Archive Folder Path
-                    OutlinedTextField(
+                    ValidatedTextField(
                         value = state.userSettings.archiveFolderPath,
                         onValueChange = onArchiveFolderPathChanged,
-                        label = { Text("Archive Folder (relative to base path)") },
-                        supportingText = {
-                            Text("Target folder for up swipe archiving • Full path: ${state.userSettings.basePath}${state.userSettings.archiveFolderPath}")
-                        },
-                        isError = state.archiveFolderPathError != null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                        label = "Archive Folder (relative to base path)",
+                        supportingText = "Target folder for up swipe archiving • Full path: ${state.userSettings.basePath}${state.userSettings.archiveFolderPath}",
+                        errorMessage = state.archiveFolderPathError
                     )
-                    
-                    state.archiveFolderPathError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
                 }
             }
 
@@ -303,30 +257,18 @@ private fun SettingsContent(
         }
 
         // Success/Error Messages
-        if (state.showSuccessMessage) {
-            LaunchedEffect(state.showSuccessMessage) {
-                delay(3000) // Show snackbar for 3 seconds
-                onSuccessMessageShown()
-            }
-            
-            Snackbar(
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Settings saved successfully!")
-            }
-        }
+        AutoDismissSnackbar(
+            message = "Settings saved successfully!",
+            isVisible = state.showSuccessMessage,
+            onDismiss = onSuccessMessageShown,
+            modifier = Modifier.padding(top = 16.dp)
+        )
 
-        if (state.showErrorMessage) {
-            LaunchedEffect(state.showErrorMessage) {
-                delay(3000) // Show snackbar for 3 seconds
-                onErrorMessageShown()
-            }
-            
-            Snackbar(
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Error saving settings. Please try again.")
-            }
-        }
+        AutoDismissSnackbar(
+            message = "Error saving settings. Please try again.",
+            isVisible = state.showErrorMessage,
+            onDismiss = onErrorMessageShown,
+            modifier = Modifier.padding(top = 16.dp)
+        )
     }
 }
