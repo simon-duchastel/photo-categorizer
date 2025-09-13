@@ -11,7 +11,6 @@ import com.duchastel.simon.photocategorizer.storage.put
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -19,7 +18,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
@@ -29,6 +27,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.wheneverBlocking
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PhotoSwiperViewModelTest {
@@ -60,24 +59,14 @@ class PhotoSwiperViewModelTest {
         localStorage = mock<LocalStorageRepository>()
         Dispatchers.setMain(testDispatcher)
 
-        // Setup default mock behavior for suspend functions
-        runBlocking { 
-            whenever(photoRepository.getPhotos(any())).thenReturn(samplePhotos)
-            doAnswer { /* do nothing */ }.whenever(photoRepository).movePhoto(any(), any())
-            whenever(photoRepository.getUnauthenticatedLinkForPhoto(any())).thenReturn("mock-url")
-        }
-        
-        // Setup localStorage mocks using doReturn/whenever pattern for generic methods
-        whenever(localStorage.getString(any())).thenReturn(null)
-        doAnswer { /* do nothing */ }.whenever(localStorage).putString(any(), any())
-        doReturn(null).whenever(localStorage).get<UserSettings>(any())
-        doAnswer { /* do nothing */ }.whenever(localStorage).put(any(), any<UserSettings>())
+        wheneverBlocking { photoRepository.getPhotos(any()) } doReturn samplePhotos
+        wheneverBlocking { photoRepository.getUnauthenticatedLinkForPhoto(any()) } doReturn "mock-url"
 
         viewModel = PhotoSwiperViewModel(photoRepository, localStorage, testDispatcher)
     }
 
     @Test
-    fun `initial state should have correct defaults`() = runTest {
+    fun initial_state_should_have_correct_defaults() = runTest {
         advanceUntilIdle()
 
         val state = viewModel.state.first()
@@ -89,7 +78,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `ViewModel should use custom camera roll path from settings on initialization`() = runTest {
+    fun view_model_should_use_custom_camera_roll_path_from_settings_on_initialization() = runTest {
         // Setup custom settings with different camera roll path
         val customSettings = UserSettings(
             backendType = BackendType.DROPBOX,
@@ -102,12 +91,10 @@ class PhotoSwiperViewModelTest {
         // Create separate mocks for this test to avoid conflicts
         val testPhotoRepository = mock<PhotoRepository>()
         val testLocalStorage = mock<LocalStorageRepository>()
-        
-        runBlocking {
-            whenever(testPhotoRepository.getPhotos(any())).thenReturn(samplePhotos)
-            whenever(testPhotoRepository.getUnauthenticatedLinkForPhoto(any())).thenReturn("mock-url")
-        }
-        doReturn(customSettings).whenever(testLocalStorage).get<UserSettings>(any())
+
+        wheneverBlocking { testPhotoRepository.getPhotos(any()) } doReturn samplePhotos
+        wheneverBlocking { testPhotoRepository.getUnauthenticatedLinkForPhoto(any()) } doReturn "mock-url"
+        whenever(testLocalStorage.get<UserSettings>(any())).thenReturn(customSettings)
 
         // Create new ViewModel to test initialization
         val newViewModel = PhotoSwiperViewModel(testPhotoRepository, testLocalStorage, testDispatcher)
@@ -117,8 +104,9 @@ class PhotoSwiperViewModelTest {
         verify(testPhotoRepository).getPhotos("/custom/camera/path")
     }
 
-    @Test 
-    fun `ViewModel should use default camera roll path when localStorage is null`() = runTest {
+    @Test
+    fun view_model_should_use_default_camera_roll_path_when_local_storage_is_null() = runTest {
+        advanceUntilIdle()
         // This test verifies that the original viewModel (already created in setUp) 
         // used the default camera roll path since localStorage.get returns null by default
         
@@ -128,7 +116,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `showNewFolderModal should set modal state`() = runTest {
+    fun show_new_folder_modal_should_set_modal_state() = runTest {
         val testPhoto = PhotoSwiperViewModel.DisplayPhoto("/test/photo.jpg")
 
         viewModel.showNewFolderModal(testPhoto)
@@ -140,7 +128,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `hideNewFolderModal should clear modal state`() = runTest {
+    fun hide_new_folder_modal_should_clear_modal_state() = runTest {
         val testPhoto = PhotoSwiperViewModel.DisplayPhoto("/test/photo.jpg")
 
         viewModel.showNewFolderModal(testPhoto)
@@ -151,7 +139,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `updateNewFolderName should update folder name in modal`() = runTest {
+    fun update_new_folder_name_should_update_folder_name_in_modal() = runTest {
         val testPhoto = PhotoSwiperViewModel.DisplayPhoto("/test/photo.jpg")
 
         viewModel.showNewFolderModal(testPhoto)
@@ -164,7 +152,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `updateNewFolderName when modal is null should not crash`() = runTest {
+    fun update_new_folder_name_when_modal_is_null_should_not_crash() = runTest {
         advanceUntilIdle()
 
         viewModel.updateNewFolderName("vacation")
@@ -174,7 +162,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `confirmNewFolder with blank folder name should not process`() = runTest {
+    fun confirm_new_folder_with_blank_folder_name_should_not_process() = runTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         
@@ -190,7 +178,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `confirmNewFolder when modal is null should not crash`() = runTest {
+    fun confirm_new_folder_when_modal_is_null_should_not_crash() = runTest {
         advanceUntilIdle()
 
         viewModel.confirmNewFolder()
@@ -200,11 +188,11 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `confirmNewFolder should combine base path with new folder name`() = runTest {
+    fun confirm_new_folder_should_combine_base_path_with_new_folder_name() = runTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         val photo = state.photos[0]
-        
+
         // Setup custom settings with base path
         val customSettings = UserSettings(
             backendType = BackendType.DROPBOX,
@@ -213,7 +201,7 @@ class PhotoSwiperViewModelTest {
             destinationFolderPath = "/vacation",
             archiveFolderPath = "/archive"
         )
-        doReturn(customSettings).whenever(localStorage).get<UserSettings>("user_settings")
+        whenever(localStorage.get<UserSettings>(any())).thenReturn(customSettings)
 
         viewModel.showNewFolderModal(photo)
         viewModel.updateNewFolderName("summer-trip")
@@ -231,13 +219,13 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `confirmNewFolder should use default base path when localStorage is null`() = runTest {
+    fun confirm_new_folder_should_use_default_base_path_when_local_storage_is_null() = runTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         val photo = state.photos[0]
         
         // Ensure localStorage returns null for settings (default mock behavior)
-        doReturn(null).whenever(localStorage).get<UserSettings>("user_settings")
+        whenever(localStorage.get<UserSettings>(any())).thenReturn(null)
 
         viewModel.showNewFolderModal(photo)
         viewModel.updateNewFolderName("new-folder")
@@ -255,7 +243,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `confirmNewFolder should hide modal after processing`() = runTest {
+    fun confirm_new_folder_should_hide_modal_after_processing() = runTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         val photo = state.photos[0]
@@ -276,7 +264,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-     fun `attachImageRequest should update photo with image request`() = runTest {
+    fun attach_image_request_should_update_photo_with_image_request() = runTest {
          advanceUntilIdle()
          val state = viewModel.state.first()
          val photo = state.photos[0]
@@ -294,19 +282,19 @@ class PhotoSwiperViewModelTest {
      }
 
     @Test
-    fun `DisplayPhoto fileName should extract correct file name`() {
+    fun display_photo_file_name_should_extract_correct_file_name() {
         val photo = PhotoSwiperViewModel.DisplayPhoto("/camera test/camera roll/vacation-photo.jpg")
         assertEquals("vacation-photo.jpg", photo.fileName)
     }
 
     @Test
-    fun `DisplayPhoto fileName with no path separators should return whole path`() {
+    fun display_photo_file_name_with_no_path_separators_should_return_whole_path() {
         val photo = PhotoSwiperViewModel.DisplayPhoto("photo.jpg")
         assertEquals("photo.jpg", photo.fileName)
     }
 
     @Test
-    fun `NewFolderModalState should have correct default values`() {
+    fun new_folder_modal_state_should_have_correct_default_values() {
         val photo = PhotoSwiperViewModel.DisplayPhoto("/test/photo.jpg")
         val modalState = PhotoSwiperViewModel.NewFolderModalState(photo = photo)
 
@@ -315,7 +303,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-     fun `processPhoto should advance photo index`() = runTest {
+    fun process_photo_should_advance_photo_index() = runTest {
          advanceUntilIdle()
 
          viewModel.processPhoto(0, SwipeDirection.Right)
@@ -326,7 +314,7 @@ class PhotoSwiperViewModelTest {
      }
 
      @Test
-     fun `processPhoto with left swipe should show modal and advance index`() = runTest {
+     fun process_photo_with_left_swipe_should_show_modal_and_advance_index() = runTest {
          advanceUntilIdle()
 
          viewModel.processPhoto(0, SwipeDirection.Left)
@@ -338,7 +326,8 @@ class PhotoSwiperViewModelTest {
      }
 
     @Test
-    fun `processPhoto with right swipe should combine base path with destination folder`() = runTest {
+    fun process_photo_with_right_swipe_should_combine_base_path_with_destination_folder() =
+        runTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         val photo = state.photos[0]
@@ -351,7 +340,7 @@ class PhotoSwiperViewModelTest {
             destinationFolderPath = "/vacation",
             archiveFolderPath = "/archive"
         )
-        doReturn(customSettings).whenever(localStorage).get<UserSettings>("user_settings")
+        whenever(localStorage.get<UserSettings>(any())).thenReturn(customSettings)
 
         viewModel.processPhoto(0, SwipeDirection.Right)
         advanceUntilIdle()
@@ -364,13 +353,14 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `processPhoto with right swipe should use default settings when localStorage is null`() = runTest {
+    fun process_photo_with_right_swipe_should_use_default_settings_when_local_storage_is_null() =
+        runTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         val photo = state.photos[0]
         
         // Ensure localStorage returns null (default mock behavior)
-        doReturn(null).whenever(localStorage).get<UserSettings>("user_settings")
+        whenever(localStorage.get<UserSettings>(any())).thenReturn(null)
 
         viewModel.processPhoto(0, SwipeDirection.Right)
         advanceUntilIdle()
@@ -384,7 +374,7 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `processPhoto with up swipe should combine base path with archive folder`() = runTest {
+    fun process_photo_with_up_swipe_should_combine_base_path_with_archive_folder() = runTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         val photo = state.photos[0]
@@ -397,7 +387,7 @@ class PhotoSwiperViewModelTest {
             destinationFolderPath = "/vacation",
             archiveFolderPath = "/archive"
         )
-        doReturn(customSettings).whenever(localStorage).get<UserSettings>("user_settings")
+        whenever(localStorage.get<UserSettings>(any())).thenReturn(customSettings)
 
         viewModel.processPhoto(0, SwipeDirection.Up)
         advanceUntilIdle()
@@ -410,13 +400,14 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun `processPhoto with up swipe should use default settings when localStorage is null`() = runTest {
+    fun process_photo_with_up_swipe_should_use_default_settings_when_local_storage_is_null() =
+        runTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         val photo = state.photos[0]
         
         // Ensure localStorage returns null (default mock behavior)
-        doReturn(null).whenever(localStorage).get<UserSettings>("user_settings")
+        whenever(localStorage.get<UserSettings>(any())).thenReturn(null)
 
         viewModel.processPhoto(0, SwipeDirection.Up)
         advanceUntilIdle()
@@ -429,3 +420,4 @@ class PhotoSwiperViewModelTest {
         )
     }
 }
+
