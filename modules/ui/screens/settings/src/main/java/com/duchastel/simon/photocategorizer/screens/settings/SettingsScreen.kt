@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.duchastel.simon.photocategorizer.ui.components.AutoDismissSnackbar
 import com.duchastel.simon.photocategorizer.ui.components.CenteredLoadingState
 import kotlinx.coroutines.delay
 
@@ -230,30 +231,18 @@ private fun SettingsContent(
         }
 
         // Success/Error Messages
-        if (state.showSuccessMessage) {
-            LaunchedEffect(state.showSuccessMessage) {
-                delay(3000) // Show snackbar for 3 seconds
-                onSuccessMessageShown()
-            }
-            
-            Snackbar(
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Settings saved successfully!")
-            }
-        }
+        AutoDismissSnackbar(
+            message = "Settings saved successfully!",
+            isVisible = state.showSuccessMessage,
+            onDismiss = onSuccessMessageShown,
+            modifier = Modifier.padding(top = 16.dp)
+        )
 
-        if (state.showErrorMessage) {
-            LaunchedEffect(state.showErrorMessage) {
-                delay(3000) // Show snackbar for 3 seconds
-                onErrorMessageShown()
-            }
-            
-            Snackbar(
-                modifier = Modifier.padding(top = 16.dp)
-            ) {
-                Text("Error saving settings. Please try again.")
-            }
-        }
+        AutoDismissSnackbar(
+            message = "Error saving settings. Please try again.",
+            isVisible = state.showErrorMessage,
+            onDismiss = onErrorMessageShown,
+            modifier = Modifier.padding(top = 16.dp)
+        )
     }
 }

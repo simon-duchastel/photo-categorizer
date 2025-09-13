@@ -3,6 +3,7 @@
 Reusable UI components used throughout the app.
 
 ## Components
+- `AutoDismissSnackbar` - Auto-dismissing snackbar component with configurable duration
 - `CenteredLoadingState` - Centered loading indicator with descriptive message text
 - `HorizontalSwiper` - Swipeable photo viewer component
 - `LoadingButton` - Button component with integrated loading state and progress indicator
