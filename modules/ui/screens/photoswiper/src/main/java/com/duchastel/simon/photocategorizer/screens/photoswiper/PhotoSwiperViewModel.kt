@@ -40,7 +40,8 @@ class PhotoSwiperViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val photos = withContext(ioDispatcher) {
-                photoRepository.getPhotos("/camera test/camera roll")
+                val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
+                photoRepository.getPhotos(currentSettings.cameraRollPath)
                     .map { DisplayPhoto(path = it.path) }
             }
             _state.update { it.copy(photos = photos) }
