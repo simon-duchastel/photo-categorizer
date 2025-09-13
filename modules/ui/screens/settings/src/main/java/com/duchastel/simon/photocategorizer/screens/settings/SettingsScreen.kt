@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -36,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.duchastel.simon.photocategorizer.ui.components.TitledCard
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,139 +101,113 @@ private fun SettingsContent(
             }
         } else {
             // Backend Selection
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+            TitledCard(
+                title = "Cloud Storage Backend"
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                var expanded by remember { mutableStateOf(false) }
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
                 ) {
-                    Text(
-                        text = "Cloud Storage Backend",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                    OutlinedTextField(
+                        value = state.userSettings.backendType.displayName,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Backend Type") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
                     )
 
-                    var expanded by remember { mutableStateOf(false) }
-
-                    ExposedDropdownMenuBox(
+                    ExposedDropdownMenu(
                         expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
+                        onDismissRequest = { expanded = false }
                     ) {
-                        OutlinedTextField(
-                            value = state.userSettings.backendType.displayName,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Backend Type") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor()
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            BackendType.entries.forEach { backendType ->
-                                DropdownMenuItem(
-                                    text = { Text(backendType.displayName) },
-                                    onClick = {
-                                        onBackendTypeChanged(backendType)
-                                        expanded = false
-                                    }
-                                )
-                            }
+                        BackendType.entries.forEach { backendType ->
+                            DropdownMenuItem(
+                                text = { Text(backendType.displayName) },
+                                onClick = {
+                                    onBackendTypeChanged(backendType)
+                                    expanded = false
+                                }
+                            )
                         }
                     }
                 }
             }
 
             // Folder Configuration
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+            TitledCard(
+                title = "Folder Configuration"
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
+                // Camera Roll Path
+                OutlinedTextField(
+                    value = state.userSettings.cameraRollPath,
+                    onValueChange = onCameraRollPathChanged,
+                    label = { Text("Camera Roll Location") },
+                    supportingText = {
+                        Text("Source folder containing photos to categorize")
+                    },
+                    isError = state.cameraRollPathError != null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                )
+                
+                state.cameraRollPathError?.let { error ->
                     Text(
-                        text = "Folder Configuration",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
+                }
 
-                    // Camera Roll Path
-                    OutlinedTextField(
-                        value = state.userSettings.cameraRollPath,
-                        onValueChange = onCameraRollPathChanged,
-                        label = { Text("Camera Roll Location") },
-                        supportingText = {
-                            Text("Source folder containing photos to categorize")
-                        },
-                        isError = state.cameraRollPathError != null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                // Destination Folder Path
+                OutlinedTextField(
+                    value = state.userSettings.destinationFolderPath,
+                    onValueChange = onDestinationFolderPathChanged,
+                    label = { Text("Destination Folder") },
+                    supportingText = {
+                        Text("Target folder for right swipe categorization")
+                    },
+                    isError = state.destinationFolderPathError != null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                )
+                
+                state.destinationFolderPathError?.let { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    
-                    state.cameraRollPathError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
+                }
 
-                    // Destination Folder Path
-                    OutlinedTextField(
-                        value = state.userSettings.destinationFolderPath,
-                        onValueChange = onDestinationFolderPathChanged,
-                        label = { Text("Destination Folder") },
-                        supportingText = {
-                            Text("Target folder for right swipe categorization")
-                        },
-                        isError = state.destinationFolderPathError != null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
+                // Archive Folder Path
+                OutlinedTextField(
+                    value = state.userSettings.archiveFolderPath,
+                    onValueChange = onArchiveFolderPathChanged,
+                    label = { Text("Archive Folder") },
+                    supportingText = {
+                        Text("Target folder for up swipe archiving")
+                    },
+                    isError = state.archiveFolderPathError != null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                )
+                
+                state.archiveFolderPathError?.let { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
                     )
-                    
-                    state.destinationFolderPathError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
-
-                    // Archive Folder Path
-                    OutlinedTextField(
-                        value = state.userSettings.archiveFolderPath,
-                        onValueChange = onArchiveFolderPathChanged,
-                        label = { Text("Archive Folder") },
-                        supportingText = {
-                            Text("Target folder for up swipe archiving")
-                        },
-                        isError = state.archiveFolderPathError != null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                    )
-                    
-                    state.archiveFolderPathError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
                 }
             }
 
