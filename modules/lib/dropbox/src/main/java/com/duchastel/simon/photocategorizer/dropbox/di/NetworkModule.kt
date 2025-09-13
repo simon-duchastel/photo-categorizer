@@ -2,6 +2,7 @@ package com.duchastel.simon.photocategorizer.dropbox.di
 
 import com.duchastel.simon.photocategorizer.auth.AuthRepository
 import com.duchastel.simon.photocategorizer.auth.AccessTokenAuthInterceptor
+import com.duchastel.simon.photocategorizer.auth.AuthRetryInterceptor
 import com.duchastel.simon.photocategorizer.auth.LoggedOutInterceptor
 import com.duchastel.simon.photocategorizer.dropbox.network.DROPBOX_API_BASE_URL
 import com.duchastel.simon.photocategorizer.dropbox.network.DropboxFileApi
@@ -33,6 +34,15 @@ object NetworkModule {
     @Provides
     @Dropbox
     @Singleton
+    fun provideAuthRetryInterceptor(
+        @Dropbox authRepository: AuthRepository
+    ): AuthRetryInterceptor {
+        return AuthRetryInterceptor(authRepository)
+    }
+
+    @Provides
+    @Dropbox
+    @Singleton
     fun provideLoggedOutInterceptor(
         @Dropbox authRepository: AuthRepository
     ): LoggedOutInterceptor {
@@ -53,12 +63,14 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         @Dropbox authInterceptor: AccessTokenAuthInterceptor,
+        @Dropbox authRetryInterceptor: AuthRetryInterceptor,
         @Dropbox loggedOutInterceptor: LoggedOutInterceptor,
         @Dropbox loggingInterceptor: HttpLoggingInterceptor,
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(authInterceptor)
+            .addInterceptor(authRetryInterceptor)
             .addInterceptor(loggedOutInterceptor)
             .build()
     }
