@@ -18,7 +18,6 @@ fun ValidatedTextField(
     supportingText: String? = null,
     placeholder: String? = null,
     errorMessage: String? = null,
-    isError: Boolean = errorMessage != null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -28,12 +27,12 @@ fun ValidatedTextField(
             label = { Text(label) },
             placeholder = placeholder?.let { { Text(it) } },
             supportingText = supportingText?.let { { Text(it) } },
-            isError = isError,
+            isError = errorMessage != null,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
         )
-        
+
         errorMessage?.let { error ->
             Text(
                 text = error,
