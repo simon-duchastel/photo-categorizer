@@ -5,6 +5,7 @@ Reusable UI components used throughout the app.
 ## Components
 - `CenteredLoadingState` - Centered loading indicator with descriptive message text
 - `HorizontalSwiper` - Swipeable photo viewer component
+- `LoadingButton` - Button component with integrated loading state and progress indicator
 - `OneWayVerticalSwiper` - Vertical swipe component
 - `TextInputModal` - Generic modal dialog with text input field and customizable text
 - `ValidatedTextField` - Text input field with validation and error handling capabilities
