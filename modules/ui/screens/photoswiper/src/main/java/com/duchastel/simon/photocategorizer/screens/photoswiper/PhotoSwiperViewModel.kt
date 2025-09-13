@@ -40,7 +40,8 @@ class PhotoSwiperViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val photos = withContext(ioDispatcher) {
-                photoRepository.getPhotos("/camera test/camera roll")
+                val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
+                photoRepository.getPhotos(currentSettings.cameraRollPath)
                     .map { DisplayPhoto(path = it.path) }
             }
             _state.update { it.copy(photos = photos) }
@@ -159,7 +160,8 @@ class PhotoSwiperViewModel @Inject constructor(
 
     private suspend fun processPhotoToNewFolder(photo: DisplayPhoto, folderName: String) {
         withContext(ioDispatcher) {
-            val newPath = "/$folderName/${photo.fileName}"
+            val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
+            val newPath = "${currentSettings.basePath}/$folderName/${photo.fileName}"
             photoRepository.movePhoto(
                 originalPath = photo.path,
                 newPath = newPath,
@@ -179,9 +181,10 @@ class PhotoSwiperViewModel @Inject constructor(
     private suspend fun processRightSwipe(photo: DisplayPhoto) {
         withContext(ioDispatcher) {
             val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
+            val fullDestinationPath = "${currentSettings.basePath}${currentSettings.destinationFolderPath}"
             photoRepository.movePhoto(
                 originalPath = photo.path,
-                newPath = "${currentSettings.destinationFolderPath}/${photo.fileName}",
+                newPath = "$fullDestinationPath/${photo.fileName}",
             )
         }
     }
@@ -189,9 +192,10 @@ class PhotoSwiperViewModel @Inject constructor(
     private suspend fun processUpSwipe(photo: DisplayPhoto) {
         withContext(ioDispatcher) {
             val currentSettings = localStorage.get<UserSettings>(SETTINGS_KEY) ?: UserSettings.DEFAULT
+            val fullArchivePath = "${currentSettings.basePath}${currentSettings.archiveFolderPath}"
             photoRepository.movePhoto(
                 originalPath = photo.path,
-                newPath = "${currentSettings.archiveFolderPath}/${photo.fileName}",
+                newPath = "$fullArchivePath/${photo.fileName}",
             )
         }
     }

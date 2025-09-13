@@ -28,6 +28,7 @@ class SettingsViewModel @Inject constructor(
             isSaving = false,
             showSuccessMessage = false,
             showErrorMessage = false,
+            basePathError = null,
             cameraRollPathError = null,
             destinationFolderPathError = null,
             archiveFolderPathError = null,
@@ -41,6 +42,13 @@ class SettingsViewModel @Inject constructor(
 
     fun onBackendTypeChanged(backendType: BackendType) {
         _state.update { it.copy(userSettings = it.userSettings.copy(backendType = backendType)) }
+    }
+
+    fun onBasePathChanged(path: String) {
+        _state.update { it.copy(
+            userSettings = it.userSettings.copy(basePath = path),
+            basePathError = null
+        ) }
     }
 
     fun onCameraRollPathChanged(path: String) {
@@ -72,6 +80,7 @@ class SettingsViewModel @Inject constructor(
             saveSettings(currentState.userSettings)
         } else {
             _state.update { currentState.copy(
+                basePathError = validationErrors[ValidationField.BASE_PATH],
                 cameraRollPathError = validationErrors[ValidationField.CAMERA_ROLL_PATH],
                 destinationFolderPathError = validationErrors[ValidationField.DESTINATION_FOLDER_PATH],
                 archiveFolderPathError = validationErrors[ValidationField.ARCHIVE_FOLDER_PATH]
@@ -127,6 +136,10 @@ class SettingsViewModel @Inject constructor(
     private fun validateSettings(settings: UserSettings): Map<ValidationField, String> {
         val errors = mutableMapOf<ValidationField, String>()
         
+        if (settings.basePath.isBlank()) {
+            errors[ValidationField.BASE_PATH] = "Base path is required"
+        }
+        
         if (settings.cameraRollPath.isBlank()) {
             errors[ValidationField.CAMERA_ROLL_PATH] = "Camera roll path is required"
         }
@@ -156,6 +169,7 @@ class SettingsViewModel @Inject constructor(
         val isSaving: Boolean,
         val showSuccessMessage: Boolean,
         val showErrorMessage: Boolean,
+        val basePathError: String?,
         val cameraRollPathError: String?,
         val destinationFolderPathError: String?,
         val archiveFolderPathError: String?,
@@ -169,6 +183,7 @@ class SettingsViewModel @Inject constructor(
 @Serializable
 data class UserSettings(
     val backendType: BackendType,
+    val basePath: String,
     val cameraRollPath: String,
     val destinationFolderPath: String,
     val archiveFolderPath: String,
@@ -176,9 +191,10 @@ data class UserSettings(
     companion object {
         val DEFAULT = UserSettings(
             backendType = BackendType.DROPBOX,
+            basePath = "/camera test",
             cameraRollPath = "/camera test/camera roll",
-            destinationFolderPath = "/camera test/first event",
-            archiveFolderPath = "/camera test/camera roll archive",
+            destinationFolderPath = "/first event",
+            archiveFolderPath = "/camera roll archive",
         )
     }
 }
@@ -188,6 +204,8 @@ data class UserSettings(
  * Used as type-safe keys for validation error mapping.
  */
 enum class ValidationField {
+    /** Base path validation field */
+    BASE_PATH,
     /** Camera roll path validation field */
     CAMERA_ROLL_PATH,
     /** Destination folder path validation field */

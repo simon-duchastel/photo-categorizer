@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -22,17 +20,13 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
-import com.duchastel.simon.photocategorizer.ui.components.ValidatedTextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,7 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.duchastel.simon.photocategorizer.ui.components.AutoDismissSnackbar
 import com.duchastel.simon.photocategorizer.ui.components.CenteredLoadingState
 import com.duchastel.simon.photocategorizer.ui.components.TitledCard
-import kotlinx.coroutines.delay
+import com.duchastel.simon.photocategorizer.ui.components.ValidatedTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +46,7 @@ fun SettingsScreen(
     SettingsContent(
         state = state,
         onBackendTypeChanged = viewModel::onBackendTypeChanged,
+        onBasePathChanged = viewModel::onBasePathChanged,
         onCameraRollPathChanged = viewModel::onCameraRollPathChanged,
         onDestinationFolderPathChanged = viewModel::onDestinationFolderPathChanged,
         onArchiveFolderPathChanged = viewModel::onArchiveFolderPathChanged,
@@ -68,6 +63,7 @@ fun SettingsScreen(
 private fun SettingsContent(
     state: SettingsViewModel.State,
     onBackendTypeChanged: (BackendType) -> Unit,
+    onBasePathChanged: (String) -> Unit,
     onCameraRollPathChanged: (String) -> Unit,
     onDestinationFolderPathChanged: (String) -> Unit,
     onArchiveFolderPathChanged: (String) -> Unit,
@@ -138,6 +134,15 @@ private fun SettingsContent(
             TitledCard(
                 title = "Folder Configuration",
             ) {
+                // Base Path
+                ValidatedTextField(
+                    value = state.userSettings.basePath,
+                    onValueChange = onBasePathChanged,
+                    label = "Base Path",
+                    supportingText = "Base folder path for all destination folders",
+                    errorMessage = state.basePathError,
+                )
+
                 // Camera Roll Path
                 ValidatedTextField(
                     value = state.userSettings.cameraRollPath,
@@ -151,8 +156,8 @@ private fun SettingsContent(
                 ValidatedTextField(
                     value = state.userSettings.destinationFolderPath,
                     onValueChange = onDestinationFolderPathChanged,
-                    label = "Destination Folder",
-                    supportingText = "Target folder for right swipe categorization",
+                    label = "Destination Folder (relative to base path)",
+                    supportingText = "Target folder for right swipe categorization • Full path: ${state.userSettings.basePath}${state.userSettings.destinationFolderPath}",
                     errorMessage = state.destinationFolderPathError
                 )
 
@@ -160,8 +165,8 @@ private fun SettingsContent(
                 ValidatedTextField(
                     value = state.userSettings.archiveFolderPath,
                     onValueChange = onArchiveFolderPathChanged,
-                    label = "Archive Folder",
-                    supportingText = "Target folder for up swipe archiving",
+                    label = "Archive Folder (relative to base path)",
+                    supportingText = "Target folder for up swipe archiving • Full path: ${state.userSettings.basePath}${state.userSettings.archiveFolderPath}",
                     errorMessage = state.archiveFolderPathError
                 )
             }
