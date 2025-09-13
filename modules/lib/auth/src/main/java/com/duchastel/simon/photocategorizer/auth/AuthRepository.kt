@@ -46,6 +46,18 @@ interface AuthRepository {
     suspend fun <T> executeWithAuthToken(
         execute: suspend (authToken: AuthToken) -> T,
     ): T
+
+    /**
+     * Refreshes the current access token if possible.
+     * Returns true if refresh succeeded, false if refresh failed (user should be logged out).
+     */
+    suspend fun refreshToken(): Boolean
+
+    /**
+     * Gets the current access token, refreshing it if necessary.
+     * Returns null if user is not logged in or refresh fails.
+     */
+    suspend fun getAccessTokenOrRefresh(): AuthToken?
 }
 
 /**
