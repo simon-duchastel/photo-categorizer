@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.duchastel.simon.photocategorizer.ui.components.CenteredLoadingState
 import com.duchastel.simon.photocategorizer.ui.components.TitledCard
 import kotlinx.coroutines.delay
 
@@ -88,17 +89,9 @@ private fun SettingsContent(
         )
 
         if (state.isLoading) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator()
-                Text(
-                    text = "Loading settings...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
+            CenteredLoadingState(
+                message = "Loading settings..."
+            )
         } else {
             // Backend Selection
             TitledCard(
