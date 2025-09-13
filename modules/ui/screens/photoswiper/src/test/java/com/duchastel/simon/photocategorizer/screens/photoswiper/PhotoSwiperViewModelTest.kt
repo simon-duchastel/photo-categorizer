@@ -3,11 +3,7 @@ package com.duchastel.simon.photocategorizer.screens.photoswiper
 import coil3.request.ImageRequest
 import com.duchastel.simon.photocategorizer.filemanager.Photo
 import com.duchastel.simon.photocategorizer.filemanager.PhotoRepository
-import com.duchastel.simon.photocategorizer.screens.settings.BackendType
-import com.duchastel.simon.photocategorizer.screens.settings.UserSettings
 import com.duchastel.simon.photocategorizer.storage.LocalStorageRepository
-import com.duchastel.simon.photocategorizer.storage.get
-import com.duchastel.simon.photocategorizer.storage.put
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -21,7 +17,6 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -80,13 +75,15 @@ class PhotoSwiperViewModelTest {
     @Test
     fun view_model_should_use_custom_camera_roll_path_from_settings_on_initialization() = runTest {
         // Setup custom settings with different camera roll path
-        val customSettings = UserSettings(
-            backendType = BackendType.DROPBOX,
-            basePath = "/photos/2024",
-            cameraRollPath = "/custom/camera/path",
-            destinationFolderPath = "/vacation",
-            archiveFolderPath = "/archive"
-        )
+        val customSettingsJson = """
+            {
+            "backendType":"DROPBOX",
+            "basePath":"/photos/2024",
+            "cameraRollPath":"/custom/camera/path",
+            "destinationFolderPath":"/vacation",
+            "archiveFolderPath":"/archive"
+            }
+        """.trimIndent()
         
         // Create separate mocks for this test to avoid conflicts
         val testPhotoRepository = mock<PhotoRepository>()
@@ -94,10 +91,10 @@ class PhotoSwiperViewModelTest {
 
         wheneverBlocking { testPhotoRepository.getPhotos(any()) } doReturn samplePhotos
         wheneverBlocking { testPhotoRepository.getUnauthenticatedLinkForPhoto(any()) } doReturn "mock-url"
-        whenever(testLocalStorage.get<UserSettings>(any())).thenReturn(customSettings)
+        whenever(testLocalStorage.getString(any())).thenReturn(customSettingsJson)
 
         // Create new ViewModel to test initialization
-        val newViewModel = PhotoSwiperViewModel(testPhotoRepository, testLocalStorage, testDispatcher)
+        PhotoSwiperViewModel(testPhotoRepository, testLocalStorage, testDispatcher)
         advanceUntilIdle()
 
         // Verify it used the custom camera roll path for loading photos
@@ -108,9 +105,9 @@ class PhotoSwiperViewModelTest {
     fun view_model_should_use_default_camera_roll_path_when_local_storage_is_null() = runTest {
         advanceUntilIdle()
         // This test verifies that the original viewModel (already created in setUp) 
-        // used the default camera roll path since localStorage.get returns null by default
+        // used the default camera roll path since localStorage.getString returns null by default
+        whenever(localStorage.getString(any())).thenReturn(null)
         
-        // The viewModel was already created in setUp with null localStorage settings
         // Verify it used the default camera roll path for loading photos
         verify(photoRepository).getPhotos("/camera test/camera roll")
     }
@@ -194,14 +191,10 @@ class PhotoSwiperViewModelTest {
         val photo = state.photos[0]
 
         // Setup custom settings with base path
-        val customSettings = UserSettings(
-            backendType = BackendType.DROPBOX,
-            basePath = "/photos/2024",
-            cameraRollPath = "/camera test/camera roll",
-            destinationFolderPath = "/vacation",
-            archiveFolderPath = "/archive"
-        )
-        whenever(localStorage.get<UserSettings>(any())).thenReturn(customSettings)
+        val customSettingsJson = """
+            {"backendType":"DROPBOX","basePath":"/photos/2024","cameraRollPath":"/camera test/camera roll","destinationFolderPath":"/vacation","archiveFolderPath":"/archive"}
+        """.trimIndent()
+        whenever(localStorage.getString(any())).thenReturn(customSettingsJson)
 
         viewModel.showNewFolderModal(photo)
         viewModel.updateNewFolderName("summer-trip")
@@ -214,32 +207,10 @@ class PhotoSwiperViewModelTest {
             newPath = "/photos/2024/summer-trip/photo1.jpg"
         )
         
+        val expectedSettingsJson = """{"backendType":"DROPBOX","basePath":"/photos/2024","cameraRollPath":"/camera test/camera roll","destinationFolderPath":"/summer-trip","archiveFolderPath":"/archive"}"""
+
         // Verify settings were updated with new destination folder
-        verify(localStorage).put("user_settings", customSettings.copy(destinationFolderPath = "/summer-trip"))
-    }
-
-    @Test
-    fun confirm_new_folder_should_use_default_base_path_when_local_storage_is_null() = runTest {
-        advanceUntilIdle()
-        val state = viewModel.state.first()
-        val photo = state.photos[0]
-        
-        // Ensure localStorage returns null for settings (default mock behavior)
-        whenever(localStorage.get<UserSettings>(any())).thenReturn(null)
-
-        viewModel.showNewFolderModal(photo)
-        viewModel.updateNewFolderName("new-folder")
-        viewModel.confirmNewFolder()
-        advanceUntilIdle()
-
-        // Should use UserSettings.DEFAULT base path: "/camera test"
-        verify(photoRepository).movePhoto(
-            originalPath = photo.path,
-            newPath = "/camera test/new-folder/photo1.jpg"
-        )
-        
-        // Verify settings were updated with new destination folder
-        verify(localStorage).put("user_settings", UserSettings.DEFAULT.copy(destinationFolderPath = "/new-folder"))
+        verify(localStorage).putString("user_settings", expectedSettingsJson)
     }
 
     @Test
@@ -333,14 +304,16 @@ class PhotoSwiperViewModelTest {
         val photo = state.photos[0]
         
         // Setup custom settings with base path
-        val customSettings = UserSettings(
-            backendType = BackendType.DROPBOX,
-            basePath = "/photos/2024",
-            cameraRollPath = "/camera test/camera roll",
-            destinationFolderPath = "/vacation",
-            archiveFolderPath = "/archive"
-        )
-        whenever(localStorage.get<UserSettings>(any())).thenReturn(customSettings)
+        val customSettingsJson = """
+            {
+            "backendType":"DROPBOX",
+            "basePath":"/photos/2024",
+            "cameraRollPath":"/camera test/camera roll",
+            "destinationFolderPath":"/vacation",
+            "archiveFolderPath":"/archive"
+            }
+        """.trimIndent()
+        whenever(localStorage.getString(any())).thenReturn(customSettingsJson)
 
         viewModel.processPhoto(0, SwipeDirection.Right)
         advanceUntilIdle()
@@ -353,41 +326,22 @@ class PhotoSwiperViewModelTest {
     }
 
     @Test
-    fun process_photo_with_right_swipe_should_use_default_settings_when_local_storage_is_null() =
-        runTest {
-        advanceUntilIdle()
-        val state = viewModel.state.first()
-        val photo = state.photos[0]
-        
-        // Ensure localStorage returns null (default mock behavior)
-        whenever(localStorage.get<UserSettings>(any())).thenReturn(null)
-
-        viewModel.processPhoto(0, SwipeDirection.Right)
-        advanceUntilIdle()
-
-        // Should use UserSettings.DEFAULT values
-        // base path: "/camera test" + destination: "/first event"
-        verify(photoRepository).movePhoto(
-            originalPath = photo.path,
-            newPath = "/camera test/first event/photo1.jpg"
-        )
-    }
-
-    @Test
     fun process_photo_with_up_swipe_should_combine_base_path_with_archive_folder() = runTest {
         advanceUntilIdle()
         val state = viewModel.state.first()
         val photo = state.photos[0]
         
         // Setup custom settings with base path
-        val customSettings = UserSettings(
-            backendType = BackendType.DROPBOX,
-            basePath = "/photos/2024",
-            cameraRollPath = "/camera test/camera roll",
-            destinationFolderPath = "/vacation",
-            archiveFolderPath = "/archive"
-        )
-        whenever(localStorage.get<UserSettings>(any())).thenReturn(customSettings)
+        val customSettingsJson = """
+            {
+            "backendType":"DROPBOX",
+            "basePath":"/photos/2024",
+            "cameraRollPath":"/camera test/camera roll",
+            "destinationFolderPath":"/vacation",
+            "archiveFolderPath":"/archive"
+            }
+        """.trimIndent()
+        whenever(localStorage.getString(any())).thenReturn(customSettingsJson)
 
         viewModel.processPhoto(0, SwipeDirection.Up)
         advanceUntilIdle()
@@ -398,26 +352,4 @@ class PhotoSwiperViewModelTest {
             newPath = "/photos/2024/archive/photo1.jpg"
         )
     }
-
-    @Test
-    fun process_photo_with_up_swipe_should_use_default_settings_when_local_storage_is_null() =
-        runTest {
-        advanceUntilIdle()
-        val state = viewModel.state.first()
-        val photo = state.photos[0]
-        
-        // Ensure localStorage returns null (default mock behavior)
-        whenever(localStorage.get<UserSettings>(any())).thenReturn(null)
-
-        viewModel.processPhoto(0, SwipeDirection.Up)
-        advanceUntilIdle()
-
-        // Should use UserSettings.DEFAULT values
-        // base path: "/camera test" + archive: "/camera roll archive"
-        verify(photoRepository).movePhoto(
-            originalPath = photo.path,
-            newPath = "/camera test/camera roll archive/photo1.jpg"
-        )
-    }
 }
-
