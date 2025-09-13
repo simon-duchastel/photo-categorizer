@@ -22,6 +22,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +49,7 @@ fun SettingsScreen(
     SettingsContent(
         state = state,
         onBackendTypeChanged = viewModel::onBackendTypeChanged,
+        onBasePathChanged = viewModel::onBasePathChanged,
         onCameraRollPathChanged = viewModel::onCameraRollPathChanged,
         onDestinationFolderPathChanged = viewModel::onDestinationFolderPathChanged,
         onArchiveFolderPathChanged = viewModel::onArchiveFolderPathChanged,
@@ -64,6 +66,7 @@ fun SettingsScreen(
 private fun SettingsContent(
     state: SettingsViewModel.State,
     onBackendTypeChanged: (BackendType) -> Unit,
+    onBasePathChanged: (String) -> Unit,
     onCameraRollPathChanged: (String) -> Unit,
     onDestinationFolderPathChanged: (String) -> Unit,
     onArchiveFolderPathChanged: (String) -> Unit,
@@ -167,6 +170,36 @@ private fun SettingsContent(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
+                    // Base Path
+                    OutlinedTextField(
+                        value = state.userSettings.basePath,
+                        onValueChange = onBasePathChanged,
+                        label = { Text("Base Path") },
+                        supportingText = {
+                            Text("Base folder path for all destination folders")
+                        },
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            disabledSupportingTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        ),
+                        isError = state.basePathError != null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    )
+                    
+                    state.basePathError?.let { error ->
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+
                     // Camera Roll Path
                     OutlinedTextField(
                         value = state.userSettings.cameraRollPath,
@@ -194,9 +227,9 @@ private fun SettingsContent(
                     OutlinedTextField(
                         value = state.userSettings.destinationFolderPath,
                         onValueChange = onDestinationFolderPathChanged,
-                        label = { Text("Destination Folder") },
+                        label = { Text("Destination Folder (relative to base path)") },
                         supportingText = {
-                            Text("Target folder for right swipe categorization")
+                            Text("Target folder for right swipe categorization • Full path: ${state.userSettings.basePath}${state.userSettings.destinationFolderPath}")
                         },
                         isError = state.destinationFolderPathError != null,
                         modifier = Modifier
@@ -217,9 +250,9 @@ private fun SettingsContent(
                     OutlinedTextField(
                         value = state.userSettings.archiveFolderPath,
                         onValueChange = onArchiveFolderPathChanged,
-                        label = { Text("Archive Folder") },
+                        label = { Text("Archive Folder (relative to base path)") },
                         supportingText = {
-                            Text("Target folder for up swipe archiving")
+                            Text("Target folder for up swipe archiving • Full path: ${state.userSettings.basePath}${state.userSettings.archiveFolderPath}")
                         },
                         isError = state.archiveFolderPathError != null,
                         modifier = Modifier
