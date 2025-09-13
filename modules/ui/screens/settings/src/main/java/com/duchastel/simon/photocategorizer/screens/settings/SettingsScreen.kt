@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -135,57 +136,34 @@ private fun SettingsContent(
 
             // Folder Configuration
             TitledCard(
-                title = "Folder Configuration"
+                title = "Folder Configuration",
             ) {
                 // Camera Roll Path
-                OutlinedTextField(
+                ValidatedTextField(
                     value = state.userSettings.cameraRollPath,
                     onValueChange = onCameraRollPathChanged,
-                    label = { Text("Camera Roll Location") },
-                    supportingText = {
-                        Text("Source folder containing photos to categorize")
-                    },
-                    isError = state.cameraRollPathError != null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
+                    label = "Camera Roll Location",
+                    supportingText = "Source folder containing photos to categorize",
+                    errorMessage = state.cameraRollPathError
                 )
-                
-                state.cameraRollPathError?.let { error ->
-                    Text(
-                        text = "Folder Configuration",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
 
-                    // Camera Roll Path
-                    ValidatedTextField(
-                        value = state.userSettings.cameraRollPath,
-                        onValueChange = onCameraRollPathChanged,
-                        label = "Camera Roll Location",
-                        supportingText = "Source folder containing photos to categorize",
-                        errorMessage = state.cameraRollPathError
-                    )
+                // Destination Folder Path
+                ValidatedTextField(
+                    value = state.userSettings.destinationFolderPath,
+                    onValueChange = onDestinationFolderPathChanged,
+                    label = "Destination Folder",
+                    supportingText = "Target folder for right swipe categorization",
+                    errorMessage = state.destinationFolderPathError
+                )
 
-                    // Destination Folder Path
-                    ValidatedTextField(
-                        value = state.userSettings.destinationFolderPath,
-                        onValueChange = onDestinationFolderPathChanged,
-                        label = "Destination Folder",
-                        supportingText = "Target folder for right swipe categorization",
-                        errorMessage = state.destinationFolderPathError
-                    )
-
-                    // Archive Folder Path
-                    ValidatedTextField(
-                        value = state.userSettings.archiveFolderPath,
-                        onValueChange = onArchiveFolderPathChanged,
-                        label = "Archive Folder",
-                        supportingText = "Target folder for up swipe archiving",
-                        errorMessage = state.archiveFolderPathError
-                    )
-                }
+                // Archive Folder Path
+                ValidatedTextField(
+                    value = state.userSettings.archiveFolderPath,
+                    onValueChange = onArchiveFolderPathChanged,
+                    label = "Archive Folder",
+                    supportingText = "Target folder for up swipe archiving",
+                    errorMessage = state.archiveFolderPathError
+                )
             }
 
             // Action Buttons
